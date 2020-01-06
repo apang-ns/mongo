@@ -1085,6 +1085,8 @@ static const char * const __stats_connection_desc[] = {
 	"transaction: transaction checkpoint currently running",
 	"transaction: transaction checkpoint generation",
 	"transaction: transaction checkpoint max time (msecs)",
+	"transaction: transaction checkpoint meta ckptlist parse",
+	"transaction: transaction checkpoint meta ckptlist search",
 	"transaction: transaction checkpoint min time (msecs)",
 	"transaction: transaction checkpoint most recent time (msecs)",
 	"transaction: transaction checkpoint scrub dirty target",
@@ -1490,6 +1492,8 @@ __wt_stat_connection_clear_single(WT_CONNECTION_STATS *stats)
 		/* not clearing txn_checkpoint_running */
 		/* not clearing txn_checkpoint_generation */
 		/* not clearing txn_checkpoint_time_max */
+		/* not clearing txn_checkpoint_meta_ckptlist_parse */
+		/* not clearing txn_checkpoint_meta_ckptlist_search */
 		/* not clearing txn_checkpoint_time_min */
 		/* not clearing txn_checkpoint_time_recent */
 		/* not clearing txn_checkpoint_scrub_target */
@@ -2045,6 +2049,10 @@ __wt_stat_connection_aggregate(
 	    WT_STAT_READ(from, txn_checkpoint_generation);
 	to->txn_checkpoint_time_max +=
 	    WT_STAT_READ(from, txn_checkpoint_time_max);
+	to->txn_checkpoint_meta_ckptlist_parse +=
+	    WT_STAT_READ(from, txn_checkpoint_meta_ckptlist_parse);
+	to->txn_checkpoint_meta_ckptlist_search +=
+	    WT_STAT_READ(from, txn_checkpoint_meta_ckptlist_search);
 	to->txn_checkpoint_time_min +=
 	    WT_STAT_READ(from, txn_checkpoint_time_min);
 	to->txn_checkpoint_time_recent +=
