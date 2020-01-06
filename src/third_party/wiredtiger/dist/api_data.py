@@ -823,6 +823,10 @@ wiredtiger_open_common =\
         for any sessions created, and can be overridden in configuring
         \c cache_cursors in WT_CONNECTION.open_session.''',
         type='boolean'),
+    Config('checkpoint_metadata_fast_parser', 'false', r'''
+        use a fast, custom parser to read metadata of the file to
+        be checkpointed''',
+        type='boolean'),
     Config('checkpoint_sync', 'true', r'''
         flush files to stable storage when closing or writing
         checkpoints''',
