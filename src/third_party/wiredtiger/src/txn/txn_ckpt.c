@@ -271,6 +271,7 @@ __wt_checkpoint_get_handles(WT_SESSION_IMPL *session, const char *cfg[])
 	WT_DECL_RET;
 	const char *name;
 	bool force;
+	uint32_t flags;
 
 	/* Find out if we have to force a checkpoint. */
 	WT_RET(__wt_config_gets_def(session, cfg, "force", 0, &cval));
@@ -349,7 +350,12 @@ __wt_checkpoint_get_handles(WT_SESSION_IMPL *session, const char *cfg[])
 	name = session->dhandle->name;
 	session->dhandle = NULL;
 
-	if ((ret = __wt_session_get_dhandle(session, name, NULL, NULL, 0)) != 0)
+	if (F_ISSET(S2C(session), WT_CONN_CKPT_PREP_NOSWEEP))
+		flags = WT_BTREE_DH_NOSWEEP;
+	else
+		flags = 0;
+
+	if ((ret = __wt_session_get_dhandle(session, name, NULL, NULL, flags)) != 0)
 		return (ret == EBUSY ? 0 : ret);
 
 	/*

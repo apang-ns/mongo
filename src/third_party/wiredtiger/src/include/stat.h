@@ -483,6 +483,7 @@ struct __wt_connection_stats {
 	int64_t dh_sweeps;
 	int64_t dh_session_handles;
 	int64_t dh_session_sweeps;
+	int64_t dh_session_sweep_time;
 	int64_t lock_checkpoint_count;
 	int64_t lock_checkpoint_wait_application;
 	int64_t lock_checkpoint_wait_internal;

@@ -507,6 +507,7 @@ __conn_btree_apply_internal(WT_SESSION_IMPL *session, WT_DATA_HANDLE *dhandle,
 {
 	WT_DECL_RET;
 	bool skip;
+	uint32_t flags;
 
 	/* Always apply the name function, if supplied. */
 	skip = false;
@@ -517,13 +518,21 @@ __conn_btree_apply_internal(WT_SESSION_IMPL *session, WT_DATA_HANDLE *dhandle,
 	if (file_func == NULL || skip)
 		return (0);
 
+	/* If optimized sweeping is enabled then don't sweep for each dhandle
+	 * but sweep once only outside of this function
+	 */
+	if (F_ISSET(S2C(session), WT_CONN_BT_APPLY_ESWEEP))
+		flags = WT_BTREE_DH_NOSWEEP;
+	else
+		flags = 0;
+
 	/*
 	 * We need to pull the handle into the session handle cache and make
 	 * sure it's referenced to stop other internal code dropping the handle
 	 * (e.g in LSM when cleaning up obsolete chunks).
 	 */
 	if ((ret = __wt_session_get_dhandle(session,
-	    dhandle->name, dhandle->checkpoint, NULL, 0)) != 0)
+	    dhandle->name, dhandle->checkpoint, NULL, flags)) != 0)
 		return (ret == EBUSY ? 0 : ret);
 
 	WT_SAVE_DHANDLE(session, ret = file_func(session, cfg));
@@ -547,6 +556,12 @@ __wt_conn_btree_apply(WT_SESSION_IMPL *session, const char *uri,
 	uint64_t bucket;
 
 	conn = S2C(session);
+
+	/* If optimized sweeping is enabled then sweep session dhandles
+	 * once only instead of once for each dhandle when going through each of them
+	 */
+	if (F_ISSET(S2C(session), WT_CONN_BT_APPLY_ESWEEP | WT_CONN_CKPT_PREP_NOSWEEP))
+		__wt_session_dhandle_sweep(session);
 
 	/*
 	 * If we're given a URI, then we walk only the hash list for that
@@ -587,6 +602,7 @@ __wt_conn_btree_apply(WT_SESSION_IMPL *session, const char *uri,
 			WT_ERR(__conn_btree_apply_internal(session,
 			    dhandle, file_func, name_func, cfg));
 		}
+
 	}
 
 err:	WT_DHANDLE_RELEASE(dhandle);

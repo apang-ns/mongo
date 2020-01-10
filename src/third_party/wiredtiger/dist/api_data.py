@@ -815,6 +815,14 @@ wiredtiger_open_common =\
         flush files to stable storage when closing or writing
         checkpoints''',
         type='boolean'),
+    Config('checkpoint_prepare_nosweep', 'false', r'''
+        avoid session dhandle sweeping for each dhandle
+        during checkpoint_prepare''',
+        type='boolean'),
+    Config('btree_apply_enhanced_sweep', 'false', r'''
+        sweep session dhandles once only during __wt_conn_btree_apply
+        instead of once for each open btree handle''',
+        type='boolean'),
     Config('direct_io', '', r'''
         Use \c O_DIRECT on POSIX systems, and \c FILE_FLAG_NO_BUFFERING on
         Windows to access files.  Options are given as a list, such as

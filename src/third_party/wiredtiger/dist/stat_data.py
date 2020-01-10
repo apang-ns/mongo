@@ -323,6 +323,7 @@ connection_stats = [
     DhandleStat('dh_conn_handle_count', 'connection data handles currently active', 'no_clear,no_scale'),
     DhandleStat('dh_session_handles', 'session dhandles swept'),
     DhandleStat('dh_session_sweeps', 'session sweep attempts'),
+    DhandleStat('dh_session_sweep_time', 'session sweep time (usecs)'),
     DhandleStat('dh_sweep_close', 'connection sweep dhandles closed'),
     DhandleStat('dh_sweep_ref', 'connection sweep candidate became referenced'),
     DhandleStat('dh_sweep_remove', 'connection sweep dhandles removed from hash list'),

@@ -2632,6 +2632,14 @@ wiredtiger_open(const char *home, WT_EVENT_HANDLER *event_handler,
 	if (cval.val)
 		F_SET(conn, WT_CONN_CKPT_SYNC);
 
+	WT_ERR(__wt_config_gets(session, cfg, "checkpoint_prepare_nosweep", &cval));
+	if (cval.val)
+		F_SET(conn, WT_CONN_CKPT_PREP_NOSWEEP);
+
+	WT_ERR(__wt_config_gets(session, cfg, "btree_apply_enhanced_sweep", &cval));
+	if (cval.val)
+		F_SET(conn, WT_CONN_BT_APPLY_ESWEEP);
+
 	WT_ERR(__wt_config_gets(session, cfg, "file_extend", &cval));
 	/*
 	 * If the log extend length is not set use the default of the configured
