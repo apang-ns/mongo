@@ -460,21 +460,35 @@ __session_get_dhandle(
 {
 	WT_DATA_HANDLE_CACHE *dhandle_cache;
 	WT_DECL_RET;
+	uint64_t time_start, time_stop;
 
+	time_start = __wt_clock(session);
 	__session_find_dhandle(session, uri, checkpoint, &dhandle_cache);
+	time_stop = __wt_clock(session);
+	WT_STAT_CONN_INCRV(session, dh_session_find_time,
+		(int64_t)WT_CLOCKDIFF_US(time_stop, time_start));
+
 	if (dhandle_cache != NULL) {
 		session->dhandle = dhandle_cache->dhandle;
 		return (0);
 	}
 
 	/* Sweep the handle list to remove any dead handles. */
+	time_start = __wt_clock(session);
 	__session_dhandle_sweep(session);
+	time_stop = __wt_clock(session);
+	WT_STAT_CONN_INCRV(session, dh_session_sweep_time,
+		(int64_t)WT_CLOCKDIFF_US(time_stop, time_start));
 
 	/*
 	 * We didn't find a match in the session cache, search the shared
 	 * handle list and cache the handle we find.
 	 */
+	time_start = __wt_clock(session);
 	WT_RET(__session_find_shared_dhandle(session, uri, checkpoint));
+	time_stop = __wt_clock(session);
+	WT_STAT_CONN_INCRV(session, dh_connection_find_time,
+		(int64_t)WT_CLOCKDIFF_US(time_stop, time_start));
 
 	/*
 	 * Fixup the reference count on failure (we incremented the reference
