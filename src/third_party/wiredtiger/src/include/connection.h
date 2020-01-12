@@ -244,6 +244,9 @@ struct __wt_connection_impl {
 
 	size_t     session_scratch_max;	/* Max scratch memory per session */
 
+	uint32_t session_dhhash_size;	/* Session dhandle hash array size */
+	uint32_t session_cursor_cache_size;	/* Session cursor cache size */
+
 	WT_CACHE  *cache;		/* Page cache */
 	volatile uint64_t cache_size;	/* Cache size (either statically
 					   configured or the current size

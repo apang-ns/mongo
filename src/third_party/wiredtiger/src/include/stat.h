@@ -587,6 +587,8 @@ struct __wt_connection_stats {
 	int64_t rec_split_stashed_bytes;
 	int64_t rec_split_stashed_objects;
 	int64_t session_open;
+	int64_t session_cursor_cache_size;
+	int64_t session_dhhash_size;
 	int64_t session_query_ts;
 	int64_t session_table_alter_fail;
 	int64_t session_table_alter_success;
