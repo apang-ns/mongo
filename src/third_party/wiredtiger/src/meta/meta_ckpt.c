@@ -254,6 +254,8 @@ __wt_meta_ckptlist_get(
 	WT_DECL_ITEM(buf);
 	WT_DECL_RET;
 	size_t allocated, slot;
+	uint64_t time_start_1, time_stop_1;
+	uint64_t time_start_2, time_stop_2;
 	char *config;
 
 	*ckptbasep = NULL;
@@ -262,11 +264,20 @@ __wt_meta_ckptlist_get(
 	allocated = slot = 0;
 	config = NULL;
 
+	time_start_1 = __wt_clock(session);
+
 	/* Retrieve the metadata information for the file. */
 	WT_RET(__wt_metadata_search(session, fname, &config));
 
+	time_stop_1 = __wt_clock(session);
+	WT_STAT_CONN_INCRV(session, txn_checkpoint_meta_ckptlist_search,
+		WT_CLOCKDIFF_US(time_stop_1, time_start_1));
+
 	/* Load any existing checkpoints into the array. */
 	WT_ERR(__wt_scr_alloc(session, 0, &buf));
+
+	time_start_2 = __wt_clock(session);
+
 	if (__wt_config_getones(session, config, "checkpoint", &v) == 0) {
 		__wt_config_subinit(session, &ckptconf, &v);
 		for (; __wt_config_next(&ckptconf, &k, &v) == 0; ++slot) {
@@ -277,6 +288,10 @@ __wt_meta_ckptlist_get(
 			WT_ERR(__ckpt_load(session, &k, &v, ckpt));
 		}
 	}
+
+	time_stop_2 = __wt_clock(session);
+	WT_STAT_CONN_INCRV(session, txn_checkpoint_meta_ckptlist_parse,
+		WT_CLOCKDIFF_US(time_stop_2, time_start_2));
 
 	/*
 	 * Allocate an extra slot for a new value, plus a slot to mark the end.

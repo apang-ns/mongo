@@ -905,13 +905,16 @@ static const char * const __stats_connection_desc[] = {
 	"cursor: open cursor count",
 	"cursor: truncate calls",
 	"data-handle: connection data handles currently active",
+	"data-handle: connection find time (usecs)",
 	"data-handle: connection sweep candidate became referenced",
 	"data-handle: connection sweep dhandles closed",
 	"data-handle: connection sweep dhandles removed from hash list",
 	"data-handle: connection sweep time-of-death sets",
 	"data-handle: connection sweeps",
 	"data-handle: session dhandles swept",
+	"data-handle: session find time (usecs)",
 	"data-handle: session sweep attempts",
+	"data-handle: session sweep time (usecs)",
 	"lock: checkpoint lock acquisitions",
 	"lock: checkpoint lock application thread wait time (usecs)",
 	"lock: checkpoint lock internal thread wait time (usecs)",
@@ -1085,13 +1088,20 @@ static const char * const __stats_connection_desc[] = {
 	"transaction: set timestamp stable updates",
 	"transaction: transaction begins",
 	"transaction: transaction checkpoint currently running",
+	"transaction: transaction checkpoint dhandle with ckpt",
 	"transaction: transaction checkpoint generation",
 	"transaction: transaction checkpoint max time (msecs)",
+	"transaction: transaction checkpoint meta ckptlist parse",
+	"transaction: transaction checkpoint meta ckptlist search",
+	"transaction: transaction checkpoint meta ckptlist set",
 	"transaction: transaction checkpoint min time (msecs)",
 	"transaction: transaction checkpoint most recent time (msecs)",
+	"transaction: transaction checkpoint prepare time (usecs)",
 	"transaction: transaction checkpoint scrub dirty target",
 	"transaction: transaction checkpoint scrub time (msecs)",
 	"transaction: transaction checkpoint total time (msecs)",
+	"transaction: transaction checkpoint tree helper cache op time (usecs)",
+	"transaction: transaction checkpoint tree helper time (usecs)",
 	"transaction: transaction checkpoints",
 	"transaction: transaction checkpoints skipped because database was clean",
 	"transaction: transaction failures due to cache overflow",
@@ -1312,13 +1322,16 @@ __wt_stat_connection_clear_single(WT_CONNECTION_STATS *stats)
 		/* not clearing cursor_open_count */
 	stats->cursor_truncate = 0;
 		/* not clearing dh_conn_handle_count */
+	stats->dh_connection_find_time = 0;
 	stats->dh_sweep_ref = 0;
 	stats->dh_sweep_close = 0;
 	stats->dh_sweep_remove = 0;
 	stats->dh_sweep_tod = 0;
 	stats->dh_sweeps = 0;
 	stats->dh_session_handles = 0;
+	stats->dh_session_find_time = 0;
 	stats->dh_session_sweeps = 0;
+	stats->dh_session_sweep_time = 0;
 	stats->lock_checkpoint_count = 0;
 	stats->lock_checkpoint_wait_application = 0;
 	stats->lock_checkpoint_wait_internal = 0;
@@ -1492,13 +1505,20 @@ __wt_stat_connection_clear_single(WT_CONNECTION_STATS *stats)
 	stats->txn_set_ts_stable_upd = 0;
 	stats->txn_begin = 0;
 		/* not clearing txn_checkpoint_running */
+	stats->txn_checkpoint_dhandle_with_ckpt = 0;
 		/* not clearing txn_checkpoint_generation */
 		/* not clearing txn_checkpoint_time_max */
+		/* not clearing txn_checkpoint_meta_ckptlist_parse */
+		/* not clearing txn_checkpoint_meta_ckptlist_search */
+		/* not clearing txn_checkpoint_meta_ckptlist_set */
 		/* not clearing txn_checkpoint_time_min */
 		/* not clearing txn_checkpoint_time_recent */
+	stats->txn_checkpoint_prepare_time = 0;
 		/* not clearing txn_checkpoint_scrub_target */
 		/* not clearing txn_checkpoint_scrub_time */
 		/* not clearing txn_checkpoint_time_total */
+	stats->txn_checkpoint_cache_op_time = 0;
+	stats->txn_checkpoint_tree_helper_time = 0;
 	stats->txn_checkpoint = 0;
 	stats->txn_checkpoint_skipped = 0;
 	stats->txn_fail_cache = 0;
@@ -1765,13 +1785,18 @@ __wt_stat_connection_aggregate(
 	to->cursor_open_count += WT_STAT_READ(from, cursor_open_count);
 	to->cursor_truncate += WT_STAT_READ(from, cursor_truncate);
 	to->dh_conn_handle_count += WT_STAT_READ(from, dh_conn_handle_count);
+	to->dh_connection_find_time +=
+	    WT_STAT_READ(from, dh_connection_find_time);
 	to->dh_sweep_ref += WT_STAT_READ(from, dh_sweep_ref);
 	to->dh_sweep_close += WT_STAT_READ(from, dh_sweep_close);
 	to->dh_sweep_remove += WT_STAT_READ(from, dh_sweep_remove);
 	to->dh_sweep_tod += WT_STAT_READ(from, dh_sweep_tod);
 	to->dh_sweeps += WT_STAT_READ(from, dh_sweeps);
 	to->dh_session_handles += WT_STAT_READ(from, dh_session_handles);
+	to->dh_session_find_time += WT_STAT_READ(from, dh_session_find_time);
 	to->dh_session_sweeps += WT_STAT_READ(from, dh_session_sweeps);
+	to->dh_session_sweep_time +=
+	    WT_STAT_READ(from, dh_session_sweep_time);
 	to->lock_checkpoint_count +=
 	    WT_STAT_READ(from, lock_checkpoint_count);
 	to->lock_checkpoint_wait_application +=
@@ -2048,20 +2073,34 @@ __wt_stat_connection_aggregate(
 	to->txn_begin += WT_STAT_READ(from, txn_begin);
 	to->txn_checkpoint_running +=
 	    WT_STAT_READ(from, txn_checkpoint_running);
+	to->txn_checkpoint_dhandle_with_ckpt +=
+	    WT_STAT_READ(from, txn_checkpoint_dhandle_with_ckpt);
 	to->txn_checkpoint_generation +=
 	    WT_STAT_READ(from, txn_checkpoint_generation);
 	to->txn_checkpoint_time_max +=
 	    WT_STAT_READ(from, txn_checkpoint_time_max);
+	to->txn_checkpoint_meta_ckptlist_parse +=
+	    WT_STAT_READ(from, txn_checkpoint_meta_ckptlist_parse);
+	to->txn_checkpoint_meta_ckptlist_search +=
+	    WT_STAT_READ(from, txn_checkpoint_meta_ckptlist_search);
+	to->txn_checkpoint_meta_ckptlist_set +=
+	    WT_STAT_READ(from, txn_checkpoint_meta_ckptlist_set);
 	to->txn_checkpoint_time_min +=
 	    WT_STAT_READ(from, txn_checkpoint_time_min);
 	to->txn_checkpoint_time_recent +=
 	    WT_STAT_READ(from, txn_checkpoint_time_recent);
+	to->txn_checkpoint_prepare_time +=
+	    WT_STAT_READ(from, txn_checkpoint_prepare_time);
 	to->txn_checkpoint_scrub_target +=
 	    WT_STAT_READ(from, txn_checkpoint_scrub_target);
 	to->txn_checkpoint_scrub_time +=
 	    WT_STAT_READ(from, txn_checkpoint_scrub_time);
 	to->txn_checkpoint_time_total +=
 	    WT_STAT_READ(from, txn_checkpoint_time_total);
+	to->txn_checkpoint_cache_op_time +=
+	    WT_STAT_READ(from, txn_checkpoint_cache_op_time);
+	to->txn_checkpoint_tree_helper_time +=
+	    WT_STAT_READ(from, txn_checkpoint_tree_helper_time);
 	to->txn_checkpoint += WT_STAT_READ(from, txn_checkpoint);
 	to->txn_checkpoint_skipped +=
 	    WT_STAT_READ(from, txn_checkpoint_skipped);
