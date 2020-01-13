@@ -2755,6 +2755,9 @@ struct __wt_connection {
  * configured session_max., an integer between 1 and 20; default \c 2.}
  * @config{
  * ),,}
+ * @config{btree_apply_enhanced_sweep, sweep session dhandles once only during
+ * __wt_conn_btree_apply instead of once for each open btree handle., a boolean
+ * flag; default \c false.}
  * @config{buffer_alignment, in-memory alignment (in bytes) for buffers used for
  * I/O. The default value of -1 indicates a platform-specific alignment value
  * should be used (4KB on Linux systems when direct I/O is configured\, zero
@@ -2796,6 +2799,8 @@ struct __wt_connection {
  * each checkpoint; setting this value above 0 configures periodic checkpoints.,
  * an integer between 0 and 100000; default \c 0.}
  * @config{ ),,}
+ * @config{checkpoint_prepare_nosweep, avoid session dhandle sweeping for each
+ * dhandle during checkpoint_prepare., a boolean flag; default \c false.}
  * @config{checkpoint_sync, flush files to stable storage when closing or
  * writing checkpoints., a boolean flag; default \c true.}
  * @config{compatibility = (, set compatibility version of database.  Changing

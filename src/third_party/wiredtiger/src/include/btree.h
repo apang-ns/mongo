@@ -245,6 +245,7 @@ struct __wt_btree {
 #define	WT_BTREE_SKIP_CKPT	0x080000u	/* Handle skipped checkpoint */
 #define	WT_BTREE_UPGRADE	0x100000u	/* Handle is for upgrade */
 #define	WT_BTREE_VERIFY		0x200000u	/* Handle is for verify */
+#define	WT_BTREE_DH_NOSWEEP	0x400000u	/* No session handle sweep */
 	uint32_t flags;
 };
 

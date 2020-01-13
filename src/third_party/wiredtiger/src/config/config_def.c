@@ -818,6 +818,9 @@ static const WT_CONFIG_CHECK confchk_wiredtiger_open[] = {
 	{ "async", "category",
 	    NULL, NULL,
 	    confchk_wiredtiger_open_async_subconfigs, 3 },
+	{ "btree_apply_enhanced_sweep", "boolean",
+	    NULL, NULL,
+	    NULL, 0 },
 	{ "buffer_alignment", "int", NULL, "min=-1,max=1MB", NULL, 0 },
 	{ "builtin_extension_config", "string", NULL, NULL, NULL, 0 },
 	{ "cache_cursors", "boolean", NULL, NULL, NULL, 0 },
@@ -827,6 +830,9 @@ static const WT_CONFIG_CHECK confchk_wiredtiger_open[] = {
 	{ "checkpoint", "category",
 	    NULL, NULL,
 	    confchk_wiredtiger_open_checkpoint_subconfigs, 2 },
+	{ "checkpoint_prepare_nosweep", "boolean",
+	    NULL, NULL,
+	    NULL, 0 },
 	{ "checkpoint_sync", "boolean", NULL, NULL, NULL, 0 },
 	{ "compatibility", "category",
 	    NULL, NULL,
@@ -928,6 +934,9 @@ static const WT_CONFIG_CHECK confchk_wiredtiger_open_all[] = {
 	{ "async", "category",
 	    NULL, NULL,
 	    confchk_wiredtiger_open_async_subconfigs, 3 },
+	{ "btree_apply_enhanced_sweep", "boolean",
+	    NULL, NULL,
+	    NULL, 0 },
 	{ "buffer_alignment", "int", NULL, "min=-1,max=1MB", NULL, 0 },
 	{ "builtin_extension_config", "string", NULL, NULL, NULL, 0 },
 	{ "cache_cursors", "boolean", NULL, NULL, NULL, 0 },
@@ -937,6 +946,9 @@ static const WT_CONFIG_CHECK confchk_wiredtiger_open_all[] = {
 	{ "checkpoint", "category",
 	    NULL, NULL,
 	    confchk_wiredtiger_open_checkpoint_subconfigs, 2 },
+	{ "checkpoint_prepare_nosweep", "boolean",
+	    NULL, NULL,
+	    NULL, 0 },
 	{ "checkpoint_sync", "boolean", NULL, NULL, NULL, 0 },
 	{ "compatibility", "category",
 	    NULL, NULL,
@@ -1039,6 +1051,9 @@ static const WT_CONFIG_CHECK confchk_wiredtiger_open_basecfg[] = {
 	{ "async", "category",
 	    NULL, NULL,
 	    confchk_wiredtiger_open_async_subconfigs, 3 },
+	{ "btree_apply_enhanced_sweep", "boolean",
+	    NULL, NULL,
+	    NULL, 0 },
 	{ "buffer_alignment", "int", NULL, "min=-1,max=1MB", NULL, 0 },
 	{ "builtin_extension_config", "string", NULL, NULL, NULL, 0 },
 	{ "cache_cursors", "boolean", NULL, NULL, NULL, 0 },
@@ -1048,6 +1063,9 @@ static const WT_CONFIG_CHECK confchk_wiredtiger_open_basecfg[] = {
 	{ "checkpoint", "category",
 	    NULL, NULL,
 	    confchk_wiredtiger_open_checkpoint_subconfigs, 2 },
+	{ "checkpoint_prepare_nosweep", "boolean",
+	    NULL, NULL,
+	    NULL, 0 },
 	{ "checkpoint_sync", "boolean", NULL, NULL, NULL, 0 },
 	{ "compatibility", "category",
 	    NULL, NULL,
@@ -1144,6 +1162,9 @@ static const WT_CONFIG_CHECK confchk_wiredtiger_open_usercfg[] = {
 	{ "async", "category",
 	    NULL, NULL,
 	    confchk_wiredtiger_open_async_subconfigs, 3 },
+	{ "btree_apply_enhanced_sweep", "boolean",
+	    NULL, NULL,
+	    NULL, 0 },
 	{ "buffer_alignment", "int", NULL, "min=-1,max=1MB", NULL, 0 },
 	{ "builtin_extension_config", "string", NULL, NULL, NULL, 0 },
 	{ "cache_cursors", "boolean", NULL, NULL, NULL, 0 },
@@ -1153,6 +1174,9 @@ static const WT_CONFIG_CHECK confchk_wiredtiger_open_usercfg[] = {
 	{ "checkpoint", "category",
 	    NULL, NULL,
 	    confchk_wiredtiger_open_checkpoint_subconfigs, 2 },
+	{ "checkpoint_prepare_nosweep", "boolean",
+	    NULL, NULL,
+	    NULL, 0 },
 	{ "checkpoint_sync", "boolean", NULL, NULL, NULL, 0 },
 	{ "compatibility", "category",
 	    NULL, NULL,
@@ -1539,10 +1563,11 @@ static const WT_CONFIG_ENTRY config_entries[] = {
 	  confchk_table_meta, 6
 	},
 	{ "wiredtiger_open",
-	  "async=(enabled=false,ops_max=1024,threads=2),buffer_alignment=-1"
-	  ",builtin_extension_config=,cache_cursors=true,"
-	  "cache_max_wait_ms=0,cache_overhead=8,cache_size=100MB,"
-	  "checkpoint=(log_size=0,wait=0),checkpoint_sync=true,"
+	  "async=(enabled=false,ops_max=1024,threads=2),"
+	  "btree_apply_enhanced_sweep=false,buffer_alignment=-1,"
+	  "builtin_extension_config=,cache_cursors=true,cache_max_wait_ms=0"
+	  ",cache_overhead=8,cache_size=100MB,checkpoint=(log_size=0,"
+	  "wait=0),checkpoint_prepare_nosweep=false,checkpoint_sync=true,"
 	  "compatibility=(release=,require_max=,require_min=),"
 	  "config_base=true,create=false,direct_io=,encryption=(keyid=,"
 	  "name=,secretkey=),error_prefix=,eviction=(threads_max=8,"
@@ -1565,13 +1590,14 @@ static const WT_CONFIG_ENTRY config_entries[] = {
 	  "transaction_sync=(enabled=false,method=fsync),"
 	  "use_environment=true,use_environment_priv=false,verbose=,"
 	  "write_through=",
-	  confchk_wiredtiger_open, 49
+	  confchk_wiredtiger_open, 51
 	},
 	{ "wiredtiger_open_all",
-	  "async=(enabled=false,ops_max=1024,threads=2),buffer_alignment=-1"
-	  ",builtin_extension_config=,cache_cursors=true,"
-	  "cache_max_wait_ms=0,cache_overhead=8,cache_size=100MB,"
-	  "checkpoint=(log_size=0,wait=0),checkpoint_sync=true,"
+	  "async=(enabled=false,ops_max=1024,threads=2),"
+	  "btree_apply_enhanced_sweep=false,buffer_alignment=-1,"
+	  "builtin_extension_config=,cache_cursors=true,cache_max_wait_ms=0"
+	  ",cache_overhead=8,cache_size=100MB,checkpoint=(log_size=0,"
+	  "wait=0),checkpoint_prepare_nosweep=false,checkpoint_sync=true,"
 	  "compatibility=(release=,require_max=,require_min=),"
 	  "config_base=true,create=false,direct_io=,encryption=(keyid=,"
 	  "name=,secretkey=),error_prefix=,eviction=(threads_max=8,"
@@ -1594,13 +1620,14 @@ static const WT_CONFIG_ENTRY config_entries[] = {
 	  "transaction_sync=(enabled=false,method=fsync),"
 	  "use_environment=true,use_environment_priv=false,verbose=,"
 	  "version=(major=0,minor=0),write_through=",
-	  confchk_wiredtiger_open_all, 50
+	  confchk_wiredtiger_open_all, 52
 	},
 	{ "wiredtiger_open_basecfg",
-	  "async=(enabled=false,ops_max=1024,threads=2),buffer_alignment=-1"
-	  ",builtin_extension_config=,cache_cursors=true,"
-	  "cache_max_wait_ms=0,cache_overhead=8,cache_size=100MB,"
-	  "checkpoint=(log_size=0,wait=0),checkpoint_sync=true,"
+	  "async=(enabled=false,ops_max=1024,threads=2),"
+	  "btree_apply_enhanced_sweep=false,buffer_alignment=-1,"
+	  "builtin_extension_config=,cache_cursors=true,cache_max_wait_ms=0"
+	  ",cache_overhead=8,cache_size=100MB,checkpoint=(log_size=0,"
+	  "wait=0),checkpoint_prepare_nosweep=false,checkpoint_sync=true,"
 	  "compatibility=(release=,require_max=,require_min=),direct_io=,"
 	  "encryption=(keyid=,name=,secretkey=),error_prefix=,"
 	  "eviction=(threads_max=8,threads_min=1),"
@@ -1620,13 +1647,14 @@ static const WT_CONFIG_ENTRY config_entries[] = {
 	  "path=\".\",sources=,timestamp=\"%b %d %H:%M:%S\",wait=0),"
 	  "timing_stress_for_test=,transaction_sync=(enabled=false,"
 	  "method=fsync),verbose=,version=(major=0,minor=0),write_through=",
-	  confchk_wiredtiger_open_basecfg, 44
+	  confchk_wiredtiger_open_basecfg, 46
 	},
 	{ "wiredtiger_open_usercfg",
-	  "async=(enabled=false,ops_max=1024,threads=2),buffer_alignment=-1"
-	  ",builtin_extension_config=,cache_cursors=true,"
-	  "cache_max_wait_ms=0,cache_overhead=8,cache_size=100MB,"
-	  "checkpoint=(log_size=0,wait=0),checkpoint_sync=true,"
+	  "async=(enabled=false,ops_max=1024,threads=2),"
+	  "btree_apply_enhanced_sweep=false,buffer_alignment=-1,"
+	  "builtin_extension_config=,cache_cursors=true,cache_max_wait_ms=0"
+	  ",cache_overhead=8,cache_size=100MB,checkpoint=(log_size=0,"
+	  "wait=0),checkpoint_prepare_nosweep=false,checkpoint_sync=true,"
 	  "compatibility=(release=,require_max=,require_min=),direct_io=,"
 	  "encryption=(keyid=,name=,secretkey=),error_prefix=,"
 	  "eviction=(threads_max=8,threads_min=1),"
@@ -1646,7 +1674,7 @@ static const WT_CONFIG_ENTRY config_entries[] = {
 	  "path=\".\",sources=,timestamp=\"%b %d %H:%M:%S\",wait=0),"
 	  "timing_stress_for_test=,transaction_sync=(enabled=false,"
 	  "method=fsync),verbose=,write_through=",
-	  confchk_wiredtiger_open_usercfg, 43
+	  confchk_wiredtiger_open_usercfg, 45
 	},
 	{ NULL, NULL, NULL, 0 }
 };

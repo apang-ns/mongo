@@ -666,6 +666,7 @@ extern int __wt_session_lock_dhandle(WT_SESSION_IMPL *session, uint32_t flags, b
 extern int __wt_session_release_dhandle(WT_SESSION_IMPL *session) WT_GCC_FUNC_DECL_ATTRIBUTE((warn_unused_result));
 extern int __wt_session_get_btree_ckpt(WT_SESSION_IMPL *session, const char *uri, const char *cfg[], uint32_t flags) WT_GCC_FUNC_DECL_ATTRIBUTE((warn_unused_result));
 extern void __wt_session_close_cache(WT_SESSION_IMPL *session);
+extern void __wt_session_dhandle_sweep(WT_SESSION_IMPL *session);
 extern int __wt_session_get_dhandle(WT_SESSION_IMPL *session, const char *uri, const char *checkpoint, const char *cfg[], uint32_t flags) WT_GCC_FUNC_DECL_ATTRIBUTE((warn_unused_result));
 extern int __wt_session_lock_checkpoint(WT_SESSION_IMPL *session, const char *checkpoint) WT_GCC_FUNC_DECL_ATTRIBUTE((warn_unused_result));
 extern int __wt_salvage(WT_SESSION_IMPL *session, const char *cfg[]) WT_GCC_FUNC_DECL_ATTRIBUTE((warn_unused_result));
