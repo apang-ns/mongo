@@ -85,7 +85,12 @@
  * Default hash table size; we don't need a prime number of buckets
  * because we always use a good hash function.
  */
-#define	WT_HASH_ARRAY_SIZE	131072
+#define	WT_HASH_ARRAY_SIZE	512
+
+/*
+ * Default hash table size for large hash arrays.
+ */
+#define	WT_BIG_HASH_ARRAY_SIZE 131072
 
 /*
  * __wt_calloc_def, __wt_calloc_one --

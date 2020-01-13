@@ -206,19 +206,21 @@ struct __wt_connection_impl {
 	 * URI.
 	 */
 					/* Locked: data handle hash array */
-	TAILQ_HEAD(__wt_dhhash, __wt_data_handle) dhhash[WT_HASH_ARRAY_SIZE];
+	TAILQ_HEAD(
+		__wt_dhhash, __wt_data_handle) dhhash[WT_BIG_HASH_ARRAY_SIZE];
 					/* Locked: data handle list */
 	TAILQ_HEAD(__wt_dhandle_qh, __wt_data_handle) dhqh;
 					/* Locked: LSM handle list. */
 	TAILQ_HEAD(__wt_lsm_qh, __wt_lsm_tree) lsmqh;
 					/* Locked: file list */
-	TAILQ_HEAD(__wt_fhhash, __wt_fh) fhhash[WT_HASH_ARRAY_SIZE];
+	TAILQ_HEAD(__wt_fhhash, __wt_fh) fhhash[WT_BIG_HASH_ARRAY_SIZE];
 	TAILQ_HEAD(__wt_fh_qh, __wt_fh) fhqh;
 					/* Locked: library list */
 	TAILQ_HEAD(__wt_dlh_qh, __wt_dlh) dlhqh;
 
 	WT_SPINLOCK block_lock;		/* Locked: block manager list */
-	TAILQ_HEAD(__wt_blockhash, __wt_block) blockhash[WT_HASH_ARRAY_SIZE];
+	TAILQ_HEAD(
+		__wt_blockhash, __wt_block) blockhash[WT_BIG_HASH_ARRAY_SIZE];
 	TAILQ_HEAD(__wt_block_qh, __wt_block) blockqh;
 
 	u_int dhandle_count;		/* Locked: handles in the queue */
