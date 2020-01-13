@@ -15,7 +15,7 @@ typedef struct {
 	WT_FILE_SYSTEM iface;
 
 	TAILQ_HEAD(__wt_fhhash_inmem,
-	    __wt_file_handle_inmem) fhhash[WT_HASH_ARRAY_SIZE];
+	    __wt_file_handle_inmem) fhhash[WT_BIG_HASH_ARRAY_SIZE];
 	TAILQ_HEAD(__wt_fh_inmem_qh, __wt_file_handle_inmem) fhqh;
 
 	WT_SPINLOCK lock;
@@ -37,7 +37,7 @@ __im_handle_search(WT_FILE_SYSTEM *file_system, const char *name)
 	im_fs = (WT_FILE_SYSTEM_INMEM *)file_system;
 
 	hash = __wt_hash_city64(name, strlen(name));
-	bucket = hash % WT_HASH_ARRAY_SIZE;
+	bucket = hash % WT_BIG_HASH_ARRAY_SIZE;
 	TAILQ_FOREACH(im_fh, &im_fs->fhhash[bucket], hashq)
 		if (strcmp(im_fh->iface.name, name) == 0)
 			break;
@@ -66,7 +66,7 @@ __im_handle_remove(WT_SESSION_IMPL *session,
 			return (__wt_set_return(session, EBUSY));
 	}
 
-	bucket = im_fh->name_hash % WT_HASH_ARRAY_SIZE;
+	bucket = im_fh->name_hash % WT_BIG_HASH_ARRAY_SIZE;
 	WT_FILE_HANDLE_REMOVE(im_fs, im_fh, bucket);
 
 	/* Clean up private information. */
@@ -241,10 +241,10 @@ __im_fs_rename(WT_FILE_SYSTEM *file_system,
 		__wt_free(session, im_fh->iface.name);
 		im_fh->iface.name = copy;
 
-		bucket = im_fh->name_hash % WT_HASH_ARRAY_SIZE;
+		bucket = im_fh->name_hash % WT_BIG_HASH_ARRAY_SIZE;
 		WT_FILE_HANDLE_REMOVE(im_fs, im_fh, bucket);
 		im_fh->name_hash = __wt_hash_city64(to, strlen(to));
-		bucket = im_fh->name_hash % WT_HASH_ARRAY_SIZE;
+		bucket = im_fh->name_hash % WT_BIG_HASH_ARRAY_SIZE;
 		WT_FILE_HANDLE_INSERT(im_fs, im_fh, bucket);
 	}
 
@@ -485,7 +485,7 @@ __im_file_open(WT_FILE_SYSTEM *file_system, WT_SESSION *wt_session,
 	im_fh->ref = 1;
 
 	hash = __wt_hash_city64(name, strlen(name));
-	bucket = hash % WT_HASH_ARRAY_SIZE;
+	bucket = hash % WT_BIG_HASH_ARRAY_SIZE;
 	im_fh->name_hash = hash;
 	WT_FILE_HANDLE_INSERT(im_fs, im_fh, bucket);
 
@@ -547,7 +547,7 @@ __wt_os_inmemory(WT_SESSION_IMPL *session)
 
 	/* Initialize private information. */
 	TAILQ_INIT(&im_fs->fhqh);
-	for (i = 0; i < WT_HASH_ARRAY_SIZE; i++)
+	for (i = 0; i < WT_BIG_HASH_ARRAY_SIZE; i++)
 		TAILQ_INIT(&im_fs->fhhash[i]);
 
 	WT_ERR(__wt_spin_init(session, &im_fs->lock, "in-memory I/O"));

@@ -20,7 +20,7 @@ __wt_connection_init(WT_CONNECTION_IMPL *conn)
 
 	session = conn->default_session;
 
-	for (i = 0; i < WT_HASH_ARRAY_SIZE; i++) {
+	for (i = 0; i < WT_BIG_HASH_ARRAY_SIZE; i++) {
 		TAILQ_INIT(&conn->dhhash[i]);	/* Data handle hash lists */
 		TAILQ_INIT(&conn->fhhash[i]);	/* File handle hash lists */
 	}
@@ -85,7 +85,7 @@ __wt_connection_init(WT_CONNECTION_IMPL *conn)
 	 * more opaque, but for now this is simpler.
 	 */
 	WT_RET(__wt_spin_init(session, &conn->block_lock, "block manager"));
-	for (i = 0; i < WT_HASH_ARRAY_SIZE; i++)
+	for (i = 0; i < WT_BIG_HASH_ARRAY_SIZE; i++)
 		TAILQ_INIT(&conn->blockhash[i]);/* Block handle hash lists */
 	TAILQ_INIT(&conn->blockqh);		/* Block manager list */
 

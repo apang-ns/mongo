@@ -206,19 +206,21 @@ struct __wt_connection_impl {
 	 * URI.
 	 */
 					/* Locked: data handle hash array */
-	TAILQ_HEAD(__wt_dhhash, __wt_data_handle) dhhash[WT_HASH_ARRAY_SIZE];
+	TAILQ_HEAD(
+		__wt_dhhash, __wt_data_handle) dhhash[WT_BIG_HASH_ARRAY_SIZE];
 					/* Locked: data handle list */
 	TAILQ_HEAD(__wt_dhandle_qh, __wt_data_handle) dhqh;
 					/* Locked: LSM handle list. */
 	TAILQ_HEAD(__wt_lsm_qh, __wt_lsm_tree) lsmqh;
 					/* Locked: file list */
-	TAILQ_HEAD(__wt_fhhash, __wt_fh) fhhash[WT_HASH_ARRAY_SIZE];
+	TAILQ_HEAD(__wt_fhhash, __wt_fh) fhhash[WT_BIG_HASH_ARRAY_SIZE];
 	TAILQ_HEAD(__wt_fh_qh, __wt_fh) fhqh;
 					/* Locked: library list */
 	TAILQ_HEAD(__wt_dlh_qh, __wt_dlh) dlhqh;
 
 	WT_SPINLOCK block_lock;		/* Locked: block manager list */
-	TAILQ_HEAD(__wt_blockhash, __wt_block) blockhash[WT_HASH_ARRAY_SIZE];
+	TAILQ_HEAD(
+		__wt_blockhash, __wt_block) blockhash[WT_BIG_HASH_ARRAY_SIZE];
 	TAILQ_HEAD(__wt_block_qh, __wt_block) blockqh;
 
 	u_int dhandle_count;		/* Locked: handles in the queue */
@@ -243,6 +245,9 @@ struct __wt_connection_impl {
 	uint32_t	 session_cnt;	/* Session count */
 
 	size_t     session_scratch_max;	/* Max scratch memory per session */
+
+	uint32_t session_dhhash_size;	/* Session dhandle hash array size */
+	uint32_t session_cursor_cache_size;	/* Session cursor cache size */
 
 	WT_CACHE  *cache;		/* Page cache */
 	volatile uint64_t cache_size;	/* Cache size (either statically
@@ -474,34 +479,34 @@ struct __wt_connection_impl {
 	WT_FILE_SYSTEM *file_system;
 
 /* AUTOMATIC FLAG VALUE GENERATION START */
-#define	WT_CONN_CACHE_CURSORS		0x0000001u
-#define	WT_CONN_CACHE_POOL		0x0000002u
-#define	WT_CONN_CKPT_SYNC		0x0000004u
-#define	WT_CONN_CLOSING			0x0000008u
-#define	WT_CONN_CLOSING_NO_MORE_OPENS	0x0000010u
-#define	WT_CONN_CLOSING_TIMESTAMP	0x0000020u
-#define	WT_CONN_COMPATIBILITY		0x0000040u
-#define	WT_CONN_DATA_CORRUPTION		0x0000080u
-#define	WT_CONN_EVICTION_NO_LOOKASIDE	0x0000100u
-#define	WT_CONN_EVICTION_RUN		0x0000200u
-#define	WT_CONN_IN_MEMORY		0x0000400u
-#define	WT_CONN_LEAK_MEMORY		0x0000800u
-#define	WT_CONN_LOOKASIDE_OPEN		0x0001000u
-#define	WT_CONN_LSM_MERGE		0x0002000u
-#define	WT_CONN_OPTRACK			0x0004000u
-#define	WT_CONN_PANIC			0x0008000u
-#define	WT_CONN_READONLY		0x0010000u
-#define	WT_CONN_RECOVERING		0x0020000u
-#define	WT_CONN_SALVAGE			0x0040000u
-#define	WT_CONN_SERVER_ASYNC		0x0080000u
-#define	WT_CONN_SERVER_CHECKPOINT	0x0100000u
-#define	WT_CONN_SERVER_LOG		0x0200000u
-#define	WT_CONN_SERVER_LSM		0x0400000u
-#define	WT_CONN_SERVER_STATISTICS	0x0800000u
-#define	WT_CONN_SERVER_SWEEP		0x1000000u
-#define	WT_CONN_WAS_BACKUP		0x2000000u
-#define	WT_CONN_BT_APPLY_ESWEEP		0x4000000u
-#define	WT_CONN_CKPT_PREP_NOSWEEP	0x8000000u
+#define	WT_CONN_BT_APPLY_ESWEEP		0x0000001u
+#define	WT_CONN_CACHE_CURSORS		0x0000002u
+#define	WT_CONN_CACHE_POOL		0x0000004u
+#define	WT_CONN_CKPT_PREP_NOSWEEP	0x0000008u
+#define	WT_CONN_CKPT_SYNC		0x0000010u
+#define	WT_CONN_CLOSING			0x0000020u
+#define	WT_CONN_CLOSING_NO_MORE_OPENS	0x0000040u
+#define	WT_CONN_CLOSING_TIMESTAMP	0x0000080u
+#define	WT_CONN_COMPATIBILITY		0x0000100u
+#define	WT_CONN_DATA_CORRUPTION		0x0000200u
+#define	WT_CONN_EVICTION_NO_LOOKASIDE	0x0000400u
+#define	WT_CONN_EVICTION_RUN		0x0000800u
+#define	WT_CONN_IN_MEMORY		0x0001000u
+#define	WT_CONN_LEAK_MEMORY		0x0002000u
+#define	WT_CONN_LOOKASIDE_OPEN		0x0004000u
+#define	WT_CONN_LSM_MERGE		0x0008000u
+#define	WT_CONN_OPTRACK			0x0010000u
+#define	WT_CONN_PANIC			0x0020000u
+#define	WT_CONN_READONLY		0x0040000u
+#define	WT_CONN_RECOVERING		0x0080000u
+#define	WT_CONN_SALVAGE			0x0100000u
+#define	WT_CONN_SERVER_ASYNC		0x0200000u
+#define	WT_CONN_SERVER_CHECKPOINT	0x0400000u
+#define	WT_CONN_SERVER_LOG		0x0800000u
+#define	WT_CONN_SERVER_LSM		0x1000000u
+#define	WT_CONN_SERVER_STATISTICS	0x2000000u
+#define	WT_CONN_SERVER_SWEEP		0x4000000u
+#define	WT_CONN_WAS_BACKUP		0x8000000u
 /* AUTOMATIC FLAG VALUE GENERATION STOP */
 	uint32_t flags;
 };

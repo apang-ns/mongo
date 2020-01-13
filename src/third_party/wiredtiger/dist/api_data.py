@@ -909,6 +909,12 @@ wiredtiger_open_common =\
     Config('session_scratch_max', '2MB', r'''
         maximum memory to cache in each session''',
         type='int', undoc=True),
+    Config('session_dhhash_size', '8192', r'''
+        size of hash array that holds cached session dhandles''',
+        min='512'),
+    Config('session_cursor_cache_size', '8192', r'''
+        size of hash array that holds cached session cursors''',
+        min='512'),
     Config('session_table_cache', 'true', r'''
         Maintain a per-session cache of tables''',
         type='boolean', undoc=True), # Obsolete after WT-3476

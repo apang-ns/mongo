@@ -88,6 +88,11 @@
 #define	WT_HASH_ARRAY_SIZE	512
 
 /*
+ * Default hash table size for large hash arrays.
+ */
+#define	WT_BIG_HASH_ARRAY_SIZE 131072
+
+/*
  * __wt_calloc_def, __wt_calloc_one --
  *	Most calloc calls don't need separate count or sizeof arguments.
  */
