@@ -819,6 +819,14 @@ wiredtiger_open_common =\
         flush files to stable storage when closing or writing
         checkpoints''',
         type='boolean'),
+    Config('checkpoint_prepare_nosweep', 'false', r'''
+        avoid session dhandle sweeping for each dhandle
+        during checkpoint_prepare''',
+        type='boolean'),
+    Config('btree_apply_enhanced_sweep', 'false', r'''
+        sweep session dhandles once only during __wt_conn_btree_apply
+        instead of once for each open btree handle''',
+        type='boolean'),
     Config('direct_io', '', r'''
         Use \c O_DIRECT on POSIX systems, and \c FILE_FLAG_NO_BUFFERING on
         Windows to access files.  Options are given as a list, such as
@@ -905,6 +913,12 @@ wiredtiger_open_common =\
     Config('session_scratch_max', '2MB', r'''
         maximum memory to cache in each session''',
         type='int', undoc=True),
+    Config('session_dhhash_size', '8192', r'''
+        size of hash array that holds cached session dhandles''',
+        min='512'),
+    Config('session_cursor_cache_size', '8192', r'''
+        size of hash array that holds cached session cursors''',
+        min='512'),
     Config('session_table_cache', 'true', r'''
         Maintain a per-session cache of tables''',
         type='boolean', undoc=True), # Obsolete after WT-3476

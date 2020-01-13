@@ -23,7 +23,8 @@ __session_add_dhandle(WT_SESSION_IMPL *session)
 
 	dhandle_cache->dhandle = session->dhandle;
 
-	bucket = dhandle_cache->dhandle->name_hash % WT_HASH_ARRAY_SIZE;
+	bucket = dhandle_cache->dhandle->name_hash %
+		S2C(session)->session_dhhash_size;
 	TAILQ_INSERT_HEAD(&session->dhandles, dhandle_cache, q);
 	TAILQ_INSERT_HEAD(&session->dhhash[bucket], dhandle_cache, hashq);
 
@@ -40,7 +41,8 @@ __session_discard_dhandle(
 {
 	uint64_t bucket;
 
-	bucket = dhandle_cache->dhandle->name_hash % WT_HASH_ARRAY_SIZE;
+	bucket = dhandle_cache->dhandle->name_hash %
+		S2C(session)->session_dhhash_size;
 	TAILQ_REMOVE(&session->dhandles, dhandle_cache, q);
 	TAILQ_REMOVE(&session->dhhash[bucket], dhandle_cache, hashq);
 
@@ -63,7 +65,8 @@ __session_find_dhandle(WT_SESSION_IMPL *session,
 
 	dhandle = NULL;
 
-	bucket = __wt_hash_city64(uri, strlen(uri)) % WT_HASH_ARRAY_SIZE;
+	bucket = __wt_hash_city64(
+		uri, strlen(uri)) % S2C(session)->session_dhhash_size;
 retry:	TAILQ_FOREACH(dhandle_cache, &session->dhhash[bucket], hashq) {
 		dhandle = dhandle_cache->dhandle;
 		if (WT_DHANDLE_INACTIVE(dhandle) &&
@@ -386,8 +389,8 @@ __wt_session_close_cache(WT_SESSION_IMPL *session)
  * __session_dhandle_sweep --
  *	Discard any session dhandles that are not open.
  */
-static void
-__session_dhandle_sweep(WT_SESSION_IMPL *session)
+void
+__wt_session_dhandle_sweep(WT_SESSION_IMPL *session)
 {
 	WT_CONNECTION_IMPL *conn;
 	WT_DATA_HANDLE *dhandle;
@@ -456,25 +459,40 @@ __session_find_shared_dhandle(
  */
 static int
 __session_get_dhandle(
-    WT_SESSION_IMPL *session, const char *uri, const char *checkpoint)
+    WT_SESSION_IMPL *session, const char *uri, const char *checkpoint, bool nosweep)
 {
 	WT_DATA_HANDLE_CACHE *dhandle_cache;
 	WT_DECL_RET;
+	uint64_t time_start, time_stop;
 
+	time_start = __wt_clock(session);
 	__session_find_dhandle(session, uri, checkpoint, &dhandle_cache);
+	time_stop = __wt_clock(session);
+	WT_STAT_CONN_INCRV(session, dh_session_find_time,
+		(int64_t)WT_CLOCKDIFF_US(time_stop, time_start));
+
 	if (dhandle_cache != NULL) {
 		session->dhandle = dhandle_cache->dhandle;
 		return (0);
 	}
 
 	/* Sweep the handle list to remove any dead handles. */
-	__session_dhandle_sweep(session);
+	time_start = __wt_clock(session);
+	if (!nosweep)
+		__wt_session_dhandle_sweep(session);
+	time_stop = __wt_clock(session);
+	WT_STAT_CONN_INCRV(session, dh_session_sweep_time,
+		(int64_t)WT_CLOCKDIFF_US(time_stop, time_start));
 
 	/*
 	 * We didn't find a match in the session cache, search the shared
 	 * handle list and cache the handle we find.
 	 */
+	time_start = __wt_clock(session);
 	WT_RET(__session_find_shared_dhandle(session, uri, checkpoint));
+	time_stop = __wt_clock(session);
+	WT_STAT_CONN_INCRV(session, dh_connection_find_time,
+		(int64_t)WT_CLOCKDIFF_US(time_stop, time_start));
 
 	/*
 	 * Fixup the reference count on failure (we incremented the reference
@@ -503,7 +521,8 @@ __wt_session_get_dhandle(WT_SESSION_IMPL *session,
 	WT_ASSERT(session, !F_ISSET(session, WT_SESSION_NO_DATA_HANDLES));
 
 	for (;;) {
-		WT_RET(__session_get_dhandle(session, uri, checkpoint));
+		WT_RET(__session_get_dhandle(session, uri, checkpoint,
+			LF_ISSET(WT_BTREE_DH_NOSWEEP)));
 		dhandle = session->dhandle;
 
 		/* Try to lock the handle. */
@@ -577,6 +596,8 @@ __wt_session_lock_checkpoint(WT_SESSION_IMPL *session, const char *checkpoint)
 {
 	WT_DATA_HANDLE *saved_dhandle;
 	WT_DECL_RET;
+	uint32_t nosweep = F_ISSET(S2C(session),
+		WT_CONN_CKPT_PREP_NOSWEEP) ? WT_BTREE_DH_NOSWEEP : 0;
 
 	WT_ASSERT(session, WT_META_TRACKING(session));
 	saved_dhandle = session->dhandle;
@@ -587,7 +608,7 @@ __wt_session_lock_checkpoint(WT_SESSION_IMPL *session, const char *checkpoint)
 	 * checkpoint completes.
 	 */
 	WT_ERR(__wt_session_get_dhandle(session, saved_dhandle->name,
-	    checkpoint, NULL, WT_DHANDLE_EXCLUSIVE | WT_DHANDLE_LOCK_ONLY));
+	    checkpoint, NULL, WT_DHANDLE_EXCLUSIVE | WT_DHANDLE_LOCK_ONLY | nosweep));
 	if ((ret = __wt_meta_track_handle_lock(session, false)) != 0) {
 		WT_TRET(__wt_session_release_dhandle(session));
 		goto err;

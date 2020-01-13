@@ -85,7 +85,8 @@ __wt_session_cursor_cache_sweep(WT_SESSION_IMPL *session)
 	for (i = 0; i < WT_SESSION_CURSOR_SWEEP_MAX && productive; i++) {
 		++nbuckets;
 		cached_list = &session->cursor_cache[position];
-		position = (position + 1) % WT_HASH_ARRAY_SIZE;
+		position = (position + 1) %
+			S2C(session)->session_cursor_cache_size;
 		TAILQ_FOREACH_SAFE(cursor, cached_list, q, cursor_tmp) {
 			/*
 			 * First check to see if the cursor could be reopened.
@@ -250,9 +251,9 @@ static int
 __session_close_cached_cursors(WT_SESSION_IMPL *session)
 {
 	WT_DECL_RET;
-	int i;
+	uint32_t i;
 
-	for (i = 0; i < WT_HASH_ARRAY_SIZE; i++)
+	for (i = 0; i < S2C(session)->session_cursor_cache_size; i++)
 		WT_TRET(__session_close_cursors(session,
 		    &session->cursor_cache[i]));
 	return (ret);
@@ -2188,19 +2189,28 @@ __open_session(WT_CONNECTION_IMPL *conn,
 	 * If we don't have them, allocate the cursor and dhandle hash arrays.
 	 * Allocate the table hash array as well.
 	 */
-	if (session_ret->cursor_cache == NULL)
+	if (session_ret->cursor_cache == NULL) {
 		WT_ERR(__wt_calloc_def(
-		    session, WT_HASH_ARRAY_SIZE, &session_ret->cursor_cache));
-	if (session_ret->dhhash == NULL)
+		    session, conn->session_cursor_cache_size,
+			&session_ret->cursor_cache));
+
+		WT_STAT_CONN_SET(session, session_cursor_cache_size,
+			conn->session_cursor_cache_size);
+	}
+	if (session_ret->dhhash == NULL) {
 		WT_ERR(__wt_calloc_def(
-		    session, WT_HASH_ARRAY_SIZE, &session_ret->dhhash));
+		    session, conn->session_dhhash_size, &session_ret->dhhash));
+
+		WT_STAT_CONN_SET(session,
+			session_dhhash_size, conn->session_dhhash_size);
+	}
 
 	/* Initialize the dhandle hash array. */
-	for (i = 0; i < WT_HASH_ARRAY_SIZE; i++)
+	for (i = 0; i < conn->session_dhhash_size; i++)
 		TAILQ_INIT(&session_ret->dhhash[i]);
 
 	/* Initialize the cursor cache hash buckets and sweep trigger. */
-	for (i = 0; i < WT_HASH_ARRAY_SIZE; i++)
+	for (i = 0; i < conn->session_cursor_cache_size; i++)
 		TAILQ_INIT(&session_ret->cursor_cache[i]);
 	session_ret->cursor_sweep_countdown = WT_SESSION_CURSOR_SWEEP_COUNTDOWN;
 

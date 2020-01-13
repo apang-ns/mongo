@@ -271,6 +271,7 @@ __wt_checkpoint_get_handles(WT_SESSION_IMPL *session, const char *cfg[])
 	WT_DECL_RET;
 	const char *name;
 	bool force;
+	uint32_t flags;
 
 	/* Find out if we have to force a checkpoint. */
 	WT_RET(__wt_config_gets_def(session, cfg, "force", 0, &cval));
@@ -349,7 +350,12 @@ __wt_checkpoint_get_handles(WT_SESSION_IMPL *session, const char *cfg[])
 	name = session->dhandle->name;
 	session->dhandle = NULL;
 
-	if ((ret = __wt_session_get_dhandle(session, name, NULL, NULL, 0)) != 0)
+	if (F_ISSET(S2C(session), WT_CONN_CKPT_PREP_NOSWEEP))
+		flags = WT_BTREE_DH_NOSWEEP;
+	else
+		flags = 0;
+
+	if ((ret = __wt_session_get_dhandle(session, name, NULL, NULL, flags)) != 0)
 		return (ret == EBUSY ? 0 : ret);
 
 	/*
@@ -360,6 +366,7 @@ __wt_checkpoint_get_handles(WT_SESSION_IMPL *session, const char *cfg[])
 	btree->evict_walk_saved = btree->evict_walk_period;
 
 	session->ckpt_handle[session->ckpt_handle_next++] = session->dhandle;
+	WT_STAT_CONN_INCR(session, txn_checkpoint_dhandle_with_ckpt);
 	return (0);
 }
 
@@ -899,9 +906,13 @@ __txn_checkpoint(WT_SESSION_IMPL *session, const char *cfg[])
 	 * Hold the schema lock while starting the transaction and gathering
 	 * handles so the set we get is complete and correct.
 	 */
+	time_start = __wt_clock(session);
 	WT_WITH_SCHEMA_LOCK(session,
 	    ret = __checkpoint_prepare(session, &tracking, cfg));
 	WT_ERR(ret);
+	time_stop = __wt_clock(session);
+	WT_STAT_CONN_INCRV(session, txn_checkpoint_prepare_time,
+		(int64_t)WT_CLOCKDIFF_US(time_stop, time_start));
 
 	WT_ASSERT(session, txn->isolation == WT_ISO_SNAPSHOT);
 
@@ -919,7 +930,11 @@ __txn_checkpoint(WT_SESSION_IMPL *session, const char *cfg[])
 
 	__checkpoint_timing_stress(session);
 
+	time_start = __wt_clock(session);
 	WT_ERR(__checkpoint_apply(session, cfg, __checkpoint_tree_helper));
+	time_stop = __wt_clock(session);
+	WT_STAT_CONN_INCRV(session, txn_checkpoint_tree_helper_time,
+		(int64_t)WT_CLOCKDIFF_US(time_stop, time_start));
 
 	/*
 	 * Clear the dhandle so the visibility check doesn't get confused about
@@ -1571,6 +1586,7 @@ __checkpoint_tree(
 	WT_DATA_HANDLE *dhandle;
 	WT_DECL_RET;
 	WT_LSN ckptlsn;
+	uint64_t time_start, time_stop;
 	bool fake_ckpt, resolve_bm;
 
 	WT_UNUSED(cfg);
@@ -1649,10 +1665,14 @@ __checkpoint_tree(
 	resolve_bm = true;
 
 	/* Flush the file from the cache, creating the checkpoint. */
+	time_start = __wt_clock(session);
 	if (is_checkpoint)
 		WT_ERR(__wt_cache_op(session, WT_SYNC_CHECKPOINT));
 	else
 		WT_ERR(__wt_cache_op(session, WT_SYNC_CLOSE));
+	time_stop = __wt_clock(session);
+	WT_STAT_CONN_INCRV(session, txn_checkpoint_cache_op_time,
+		(int64_t)WT_CLOCKDIFF_US(time_stop, time_start));
 
 	/*
 	 * All blocks being written have been written; set the object's write
@@ -1688,8 +1708,12 @@ fake:	/*
 	    !F_ISSET(&session->txn, WT_TXN_RUNNING))
 		WT_ERR(__wt_checkpoint_sync(session, NULL));
 
+	time_start = __wt_clock(session);
 	WT_ERR(__wt_meta_ckptlist_set(
 	    session, dhandle->name, ckptbase, &ckptlsn));
+	time_stop = __wt_clock(session);
+	WT_STAT_CONN_INCRV(session, txn_checkpoint_meta_ckptlist_set,
+		(int64_t)WT_CLOCKDIFF_US(time_stop, time_start));
 
 	/*
 	 * If we wrote a checkpoint (rather than faking one), we have to resolve
