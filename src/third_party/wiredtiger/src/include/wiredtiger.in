@@ -2799,6 +2799,8 @@ struct __wt_connection {
  * each checkpoint; setting this value above 0 configures periodic checkpoints.,
  * an integer between 0 and 100000; default \c 0.}
  * @config{ ),,}
+ * @config{checkpoint_metadata_fast_parser, use a fast\, custom parser to read
+ * metadata of the file to be checkpointed., a boolean flag; default \c false.}
  * @config{checkpoint_prepare_nosweep, avoid session dhandle sweeping for each
  * dhandle during checkpoint_prepare., a boolean flag; default \c false.}
  * @config{checkpoint_sync, flush files to stable storage when closing or

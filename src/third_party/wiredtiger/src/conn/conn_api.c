@@ -2635,6 +2635,11 @@ wiredtiger_open(const char *home, WT_EVENT_HANDLER *event_handler,
 	if (cval.val)
 		F_SET(conn, WT_CONN_CACHE_CURSORS);
 
+	WT_ERR(__wt_config_gets(
+		session, cfg, "checkpoint_metadata_fast_parser", &cval));
+	if (cval.val)
+		F_SET(conn, WT_CONN_CKPT_METADATA_FAST_PARSER);
+
 	WT_ERR(__wt_config_gets(session, cfg, "checkpoint_sync", &cval));
 	if (cval.val)
 		F_SET(conn, WT_CONN_CKPT_SYNC);

@@ -6,6 +6,7 @@
  * See the file LICENSE for redistribution information.
  */
 
+#include <string.h>
 #include "wt_internal.h"
 
 static int  __ckpt_last(WT_SESSION_IMPL *, const char *, WT_CKPT *);
@@ -16,6 +17,14 @@ static int  __ckpt_named(
 		WT_SESSION_IMPL *, const char *, const char *, WT_CKPT *);
 static int  __ckpt_set(WT_SESSION_IMPL *, const char *, const char *);
 static int  __ckpt_version_chk(WT_SESSION_IMPL *, const char *, const char *);
+
+#define	CKPT_NAME_PREFIX "WiredTigerCheckpoint."
+#define	CKPT_METADATA_LEN_MAX 2048
+#define	CKPT_METADATA_ADDR 0
+#define	CKPT_METADATA_ORDER 1
+#define	CKPT_METADATA_TIME 2
+#define	CKPT_METADATA_SIZE 3
+#define	CKPT_METADATA_WRITE_GEN 4
 
 /*
  * __wt_meta_checkpoint --
@@ -241,6 +250,221 @@ __ckpt_compare_order(const void *a, const void *b)
 }
 
 /*
+ * __ckpt_parse_attribute_value --
+ *
+ *  Parse the provided attribute and store the attribute value into
+ *  the appropriate ckpt variable.
+ */
+static int
+__ckpt_parse_attribute_value(
+	WT_SESSION_IMPL *session, WT_CKPT *ckpt, uint64_t attr_idx,
+	const char *val)
+{
+	uint64_t len;
+
+	/* It is possible for the addr to be empty. */
+	len = 0;
+	if (val != NULL)
+		len = strlen(val);
+
+	switch (attr_idx) {
+		case CKPT_METADATA_ADDR:
+			/* Expect quotes around the address and trim them. */
+			if (len > 1) {
+				val += 1;
+				len -= 2;
+			}
+
+			WT_RET(__wt_buf_set(session, &ckpt->addr, val, len));
+
+			if (len == 0)
+				F_SET(ckpt, WT_CKPT_FAKE);
+			else
+				WT_RET(__wt_nhex_to_raw(
+					session, val, len, &ckpt->raw));
+			break;
+		case CKPT_METADATA_ORDER:
+			if (len == 0)
+				goto err;
+			ckpt->order = strtol(val, NULL, 10);
+			break;
+		case CKPT_METADATA_TIME:
+			if (len == 0)
+				goto err;
+			ckpt->sec = strtoimax(val, NULL, 10);
+			break;
+		case CKPT_METADATA_SIZE:
+			ckpt->ckpt_size = len > 0 ? strtoul(val, NULL, 10) : 0;
+			break;
+		case CKPT_METADATA_WRITE_GEN:
+			if (len == 0)
+				goto err;
+			ckpt->write_gen = strtoul(val, NULL, 10);
+			break;
+		default:
+			goto err;
+	}
+
+	return (0);
+
+err:
+	WT_RET_MSG(session, WT_ERROR, "corrupted checkpoint list");
+}
+
+/*
+ * __ckpt_parse_attributes --
+ *  Parse the attributes associated with this checkpoint.
+ */
+static int
+__ckpt_parse_attributes(
+	WT_SESSION_IMPL *session, WT_CKPT *ckpt, char *s, uint64_t len)
+{
+	uint64_t attr_idx;
+	uint64_t attr_keys_len;
+	uint64_t i;
+	uint64_t j;
+	char *attr;
+	char *key;
+	char *save_ptr_attr;
+	char *save_ptr_attrs;
+	char str[CKPT_METADATA_LEN_MAX];
+	char *str_p;
+	char *val;
+
+	static char *attr_keys[] = {
+		[CKPT_METADATA_ADDR] = "addr",
+		[CKPT_METADATA_ORDER] = "order",
+		[CKPT_METADATA_TIME] = "time",
+		[CKPT_METADATA_SIZE] = "size",
+		[CKPT_METADATA_WRITE_GEN] = "write_gen",
+	};
+	int attr_keys_found[] = { 0, 0, 0, 0, 0 };
+
+	/*
+	 * strtok_r modifies the input string, so we must make
+	 * a copy of it.
+	 */
+	WT_ASSERT(session, len < CKPT_METADATA_LEN_MAX);
+	strncpy(str, s, len);
+	str[len] = '\0';
+
+	/*
+	 * Split the attribute string by comma and process each attribute.
+	 */
+	str_p = str;
+	attr_keys_len = sizeof(attr_keys) / sizeof(attr_keys[0]);
+	save_ptr_attrs = NULL;
+
+	/* Note: str_p must be NULL after the first iteration. */
+	for (i = 0; i < attr_keys_len; str_p = NULL, i++) {
+		attr = strtok_r(str_p, ",", &save_ptr_attrs);
+		if (attr == NULL)
+			goto err;
+
+		/* An attribute's key and val are separated by '='. */
+		save_ptr_attr = NULL;
+		key = strtok_r(attr, "=", &save_ptr_attr);
+		val = strtok_r(NULL, "=", &save_ptr_attr);
+
+		/*
+		 * We expect the attributes appear in the order specified in
+		 * "attr_keys".
+		 * This avoids unnecessary string comparisons in the typical
+		 * case, speeding up overall parsing time by ~10%.
+		 */
+		for (j = 0; j < attr_keys_len; j++) {
+			/*
+			 * Start from the attribute we expect at the i-th token,
+			 * but still parse successfully if the attributes are
+			 * written out of order.
+			 */
+			attr_idx = (i + j) % attr_keys_len;
+
+			if (strcmp(attr_keys[attr_idx], key) == 0) {
+				attr_keys_found[attr_idx]++;
+
+				WT_RET(__ckpt_parse_attribute_value(
+					session, ckpt, attr_idx, val));
+
+				break;
+			}
+		}
+	}
+
+	/* Sanity check to see what we have parsed every attribute. */
+	for (i = 0; i < attr_keys_len; i++) {
+		if (attr_keys_found[i] != 1)
+			goto err;
+	}
+
+	return (0);
+
+err:
+	WT_RET_MSG(session, WT_ERROR, "corrupted checkpoint list");
+}
+
+/*
+ * __ckpt_load_fast_parser --
+ *
+ *	Parses checkpoint information for a checkpoint of the given name.
+ *  "s" contains the metadata attributes such as "addr", and the
+ *  pointer should be advanced.
+ *  This is an alterative to __ckpt_load() implemented with
+ *  a faster parser.
+ */
+int
+__ckpt_load_fast_parser(WT_SESSION_IMPL *session, WT_CKPT *ckpt,
+	const char *name, char **s)
+{
+	char *paren;
+
+	paren = NULL;
+
+	*s = strchr(name + sizeof(CKPT_NAME_PREFIX), '=');
+	if (*s == NULL)
+		goto err;
+
+	WT_RET(__wt_strndup(session, name, (int)(*s - name), &ckpt->name));
+
+	/*
+	 * Find the checkpoint metadata config string inside
+	 * the parentheses.
+	 *
+	 * Advance past "=" to look for the closing parenthesis. Also
+	 * search for an open parenthesis as a sanity check that there
+	 * are no unexpected nested "sub-configuration" items.
+	 */
+	(*s)++;
+	paren = strpbrk(*s + 1, ")(");
+
+	/*
+	 * Sanity check that the parentheses exist and that there
+	 * are no nested parentheses.
+	 */
+	if (**s != '(' || paren == NULL || *paren != ')')
+		goto err;
+
+	/* Advance past "(" */
+	(*s)++;
+
+	/* Parse the attribute string found inside the parentheses */
+	__ckpt_parse_attributes(session, ckpt, *s, paren - *s);
+
+	/*
+	 * Continue searching for more checkpoint metadata after
+	 * the end of this config string. Having multiple checkpoint
+	 * metadata entries for one file is not the common case
+	 * but can happen.
+	 */
+	*s = paren + 1;
+
+	return (0);
+
+err:
+	WT_RET_MSG(session, WT_ERROR, "corrupted checkpoint list");
+}
+
+/*
  * __wt_meta_ckptlist_get --
  *	Load all available checkpoint information for a file.
  */
@@ -257,6 +481,8 @@ __wt_meta_ckptlist_get(
 	uint64_t time_start_1, time_stop_1;
 	uint64_t time_start_2, time_stop_2;
 	char *config;
+	char *name;
+	char *s;
 
 	*ckptbasep = NULL;
 
@@ -278,6 +504,27 @@ __wt_meta_ckptlist_get(
 
 	time_start_2 = __wt_clock(session);
 
+	/*
+	 * Get the list of checkpoints for this file.
+	 * Use faster custom checkpoint metadata parser if configured.
+	 */
+	if (F_ISSET(S2C(session), WT_CONN_CKPT_METADATA_FAST_PARSER)) {
+		s = config;
+
+		while ((name = strstr(s, CKPT_NAME_PREFIX))) {
+			WT_ERR(__wt_realloc_def(
+				session, &allocated, slot + 1, &ckptbase));
+			ckpt = &ckptbase[slot];
+
+			WT_RET(__ckpt_load_fast_parser(
+				session, ckpt, name, &s));
+
+			slot++;
+		}
+		/* This is here to make the patch apply cleaner. */
+		goto skip;
+	}
+
 	if (__wt_config_getones(session, config, "checkpoint", &v) == 0) {
 		__wt_config_subinit(session, &ckptconf, &v);
 		for (; __wt_config_next(&ckptconf, &k, &v) == 0; ++slot) {
@@ -289,6 +536,7 @@ __wt_meta_ckptlist_get(
 		}
 	}
 
+skip:
 	time_stop_2 = __wt_clock(session);
 	WT_STAT_CONN_INCRV(session, txn_checkpoint_meta_ckptlist_parse,
 		WT_CLOCKDIFF_US(time_stop_2, time_start_2));
