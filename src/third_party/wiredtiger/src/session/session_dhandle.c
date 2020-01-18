@@ -594,6 +594,7 @@ __wt_session_lock_checkpoint(WT_SESSION_IMPL *session, const char *checkpoint)
 {
 	WT_DATA_HANDLE *saved_dhandle;
 	WT_DECL_RET;
+	uint64_t time_start, time_stop;
 
 	WT_ASSERT(session, WT_META_TRACKING(session));
 	saved_dhandle = session->dhandle;
@@ -603,8 +604,14 @@ __wt_session_lock_checkpoint(WT_SESSION_IMPL *session, const char *checkpoint)
 	 * while we are creating the new checkpoint.  Hold the lock until the
 	 * checkpoint completes.
 	 */
+	time_start = __wt_clock(session);
 	WT_ERR(__wt_session_get_dhandle(session, saved_dhandle->name,
 	    checkpoint, NULL, WT_DHANDLE_EXCLUSIVE | WT_DHANDLE_LOCK_ONLY));
+	time_stop = __wt_clock(session);
+	WT_STAT_CONN_INCRV(session,
+		dh_lock_checkpoint_get_dhandle_time,
+		(int64_t)WT_CLOCKDIFF_US(time_stop, time_start));
+
 	if ((ret = __wt_meta_track_handle_lock(session, false)) != 0) {
 		WT_TRET(__wt_session_release_dhandle(session));
 		goto err;
@@ -617,7 +624,13 @@ __wt_session_lock_checkpoint(WT_SESSION_IMPL *session, const char *checkpoint)
 	 * is especially noticeable with memory mapped files, since changes to
 	 * the underlying file are visible to the in-memory pages.
 	 */
+	time_start = __wt_clock(session);
 	WT_ERR(__wt_evict_file_exclusive_on(session));
+	time_stop = __wt_clock(session);
+	WT_STAT_CONN_INCRV(session,
+		dh_lock_checkpoint_evict_file_exclusive_time,
+		(int64_t)WT_CLOCKDIFF_US(time_stop, time_start));
+
 	ret = __wt_cache_op(session, WT_SYNC_DISCARD);
 	__wt_evict_file_exclusive_off(session);
 	WT_ERR(ret);

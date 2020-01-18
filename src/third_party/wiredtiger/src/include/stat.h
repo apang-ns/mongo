@@ -482,6 +482,8 @@ struct __wt_connection_stats {
 	int64_t dh_sweep_remove;
 	int64_t dh_sweep_tod;
 	int64_t dh_sweeps;
+	int64_t dh_lock_checkpoint_evict_file_exclusive_time;
+	int64_t dh_lock_checkpoint_get_dhandle_time;
 	int64_t dh_session_handles;
 	int64_t dh_session_find_time;
 	int64_t dh_session_sweeps;
@@ -668,6 +670,7 @@ struct __wt_connection_stats {
 	int64_t txn_checkpoint_time_min;
 	int64_t txn_checkpoint_time_recent;
 	int64_t txn_checkpoint_prepare_time;
+	int64_t txn_checkpoint_prepare_with_schema_lock_time;
 	int64_t txn_checkpoint_scrub_target;
 	int64_t txn_checkpoint_scrub_time;
 	int64_t txn_checkpoint_time_total;

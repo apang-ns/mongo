@@ -326,6 +326,8 @@ connection_stats = [
     DhandleStat('dh_session_sweep_time', 'session sweep time (usecs)'),
     DhandleStat('dh_session_find_time', 'session find time (usecs)'),
     DhandleStat('dh_connection_find_time', 'connection find time (usecs)'),
+    DhandleStat('dh_lock_checkpoint_get_dhandle_time', 'lock checkpoint get dhandle time (usecs)'),
+    DhandleStat('dh_lock_checkpoint_evict_file_exclusive_time', 'lock checkpoint evict file exclusive time (usecs)'),
     DhandleStat('dh_sweep_close', 'connection sweep dhandles closed'),
     DhandleStat('dh_sweep_ref', 'connection sweep candidate became referenced'),
     DhandleStat('dh_sweep_remove', 'connection sweep dhandles removed from hash list'),
@@ -504,6 +506,7 @@ connection_stats = [
     ##########################################
     TxnStat('txn_begin', 'transaction begins'),
     TxnStat('txn_checkpoint', 'transaction checkpoints'),
+    TxnStat('txn_checkpoint_prepare_with_schema_lock_time', 'transaction checkpoint prepare with schema lock time (usecs)'),
     TxnStat('txn_checkpoint_prepare_time', 'transaction checkpoint prepare time (usecs)'),
     TxnStat('txn_checkpoint_tree_helper_time', 'transaction checkpoint tree helper time (usecs)'),
     TxnStat('txn_checkpoint_dhandle_with_ckpt', 'transaction checkpoint dhandle with ckpt'),

@@ -564,6 +564,9 @@ __checkpoint_prepare(
 	const char *txn_cfg[] = { WT_CONFIG_BASE(session,
 	    WT_SESSION_begin_transaction), "isolation=snapshot", NULL };
 	bool use_timestamp;
+	uint64_t time_start, time_stop;
+
+	time_start = __wt_clock(session);
 
 	conn = S2C(session);
 	txn = &session->txn;
@@ -700,6 +703,11 @@ __checkpoint_prepare(
 	WT_ASSERT(session, session->ckpt_handle_next == 0);
 	WT_WITH_TABLE_READ_LOCK(session, ret = __checkpoint_apply_all(
 	    session, cfg, __wt_checkpoint_get_handles));
+
+	time_stop = __wt_clock(session);
+	WT_STAT_CONN_INCRV(session, txn_checkpoint_prepare_time,
+		(int64_t)WT_CLOCKDIFF_US(time_stop, time_start));
+
 	return (ret);
 }
 
@@ -905,7 +913,8 @@ __txn_checkpoint(WT_SESSION_IMPL *session, const char *cfg[])
 	    ret = __checkpoint_prepare(session, &tracking, cfg));
 	WT_ERR(ret);
 	time_stop = __wt_clock(session);
-	WT_STAT_CONN_INCRV(session, txn_checkpoint_prepare_time,
+	WT_STAT_CONN_INCRV(session,
+		txn_checkpoint_prepare_with_schema_lock_time,
 		(int64_t)WT_CLOCKDIFF_US(time_stop, time_start));
 
 	WT_ASSERT(session, txn->isolation == WT_ISO_SNAPSHOT);

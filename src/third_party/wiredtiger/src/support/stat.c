@@ -911,6 +911,8 @@ static const char * const __stats_connection_desc[] = {
 	"data-handle: connection sweep dhandles removed from hash list",
 	"data-handle: connection sweep time-of-death sets",
 	"data-handle: connection sweeps",
+	"data-handle: lock checkpoint evict file exclusive time (usecs)",
+	"data-handle: lock checkpoint get dhandle time (usecs)",
 	"data-handle: session dhandles swept",
 	"data-handle: session find time (usecs)",
 	"data-handle: session sweep attempts",
@@ -1097,6 +1099,7 @@ static const char * const __stats_connection_desc[] = {
 	"transaction: transaction checkpoint min time (msecs)",
 	"transaction: transaction checkpoint most recent time (msecs)",
 	"transaction: transaction checkpoint prepare time (usecs)",
+	"transaction: transaction checkpoint prepare with schema lock time (usecs)",
 	"transaction: transaction checkpoint scrub dirty target",
 	"transaction: transaction checkpoint scrub time (msecs)",
 	"transaction: transaction checkpoint total time (msecs)",
@@ -1328,6 +1331,8 @@ __wt_stat_connection_clear_single(WT_CONNECTION_STATS *stats)
 	stats->dh_sweep_remove = 0;
 	stats->dh_sweep_tod = 0;
 	stats->dh_sweeps = 0;
+	stats->dh_lock_checkpoint_evict_file_exclusive_time = 0;
+	stats->dh_lock_checkpoint_get_dhandle_time = 0;
 	stats->dh_session_handles = 0;
 	stats->dh_session_find_time = 0;
 	stats->dh_session_sweeps = 0;
@@ -1514,6 +1519,7 @@ __wt_stat_connection_clear_single(WT_CONNECTION_STATS *stats)
 		/* not clearing txn_checkpoint_time_min */
 		/* not clearing txn_checkpoint_time_recent */
 	stats->txn_checkpoint_prepare_time = 0;
+	stats->txn_checkpoint_prepare_with_schema_lock_time = 0;
 		/* not clearing txn_checkpoint_scrub_target */
 		/* not clearing txn_checkpoint_scrub_time */
 		/* not clearing txn_checkpoint_time_total */
@@ -1792,6 +1798,10 @@ __wt_stat_connection_aggregate(
 	to->dh_sweep_remove += WT_STAT_READ(from, dh_sweep_remove);
 	to->dh_sweep_tod += WT_STAT_READ(from, dh_sweep_tod);
 	to->dh_sweeps += WT_STAT_READ(from, dh_sweeps);
+	to->dh_lock_checkpoint_evict_file_exclusive_time +=
+	    WT_STAT_READ(from, dh_lock_checkpoint_evict_file_exclusive_time);
+	to->dh_lock_checkpoint_get_dhandle_time +=
+	    WT_STAT_READ(from, dh_lock_checkpoint_get_dhandle_time);
 	to->dh_session_handles += WT_STAT_READ(from, dh_session_handles);
 	to->dh_session_find_time += WT_STAT_READ(from, dh_session_find_time);
 	to->dh_session_sweeps += WT_STAT_READ(from, dh_session_sweeps);
@@ -2091,6 +2101,8 @@ __wt_stat_connection_aggregate(
 	    WT_STAT_READ(from, txn_checkpoint_time_recent);
 	to->txn_checkpoint_prepare_time +=
 	    WT_STAT_READ(from, txn_checkpoint_prepare_time);
+	to->txn_checkpoint_prepare_with_schema_lock_time +=
+	    WT_STAT_READ(from, txn_checkpoint_prepare_with_schema_lock_time);
 	to->txn_checkpoint_scrub_target +=
 	    WT_STAT_READ(from, txn_checkpoint_scrub_target);
 	to->txn_checkpoint_scrub_time +=
