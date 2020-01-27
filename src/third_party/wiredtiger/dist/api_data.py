@@ -904,7 +904,7 @@ wiredtiger_open_common =\
     Config('session_dhhash_size', '8192', r'''
         size of hash array that holds cached session dhandles''',
         min='512'),
-    Config('session_cursor_cache_size', '8192', r'''
+    Config('session_cursor_cache_size', '512', r'''
         size of hash array that holds cached session cursors''',
         min='512'),
     Config('session_table_cache', 'true', r'''
