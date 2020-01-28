@@ -82,7 +82,9 @@ __wt_session_cursor_cache_sweep(WT_SESSION_IMPL *session)
 
 	/* Turn off caching so that cursor close doesn't try to cache. */
 	F_CLR(session, WT_SESSION_CACHE_CURSORS);
-	for (i = 0; i < WT_SESSION_CURSOR_SWEEP_MAX && productive; i++) {
+	for (i = 0; i < (int)S2C(session)->session_cursor_sweep_max &&
+		productive; i++)
+	{
 		++nbuckets;
 		cached_list = &session->cursor_cache[position];
 		position = (position + 1) %
@@ -106,7 +108,8 @@ __wt_session_cursor_cache_sweep(WT_SESSION_IMPL *session)
 		 * We continue sweeping as long as we have some good average
 		 * productivity, or we are under the minimum.
 		 */
-		productive = (nclosed + WT_SESSION_CURSOR_SWEEP_MIN > i);
+		productive = (nclosed +
+			(int)S2C(session)->session_cursor_sweep_min > i);
 	}
 
 	session->cursor_sweep_position = position;
@@ -2193,16 +2196,10 @@ __open_session(WT_CONNECTION_IMPL *conn,
 		WT_ERR(__wt_calloc_def(
 		    session, conn->session_cursor_cache_size,
 			&session_ret->cursor_cache));
-
-		WT_STAT_CONN_SET(session, session_cursor_cache_size,
-			conn->session_cursor_cache_size);
 	}
 	if (session_ret->dhhash == NULL) {
 		WT_ERR(__wt_calloc_def(
 		    session, conn->session_dhhash_size, &session_ret->dhhash));
-
-		WT_STAT_CONN_SET(session,
-			session_dhhash_size, conn->session_dhhash_size);
 	}
 
 	/* Initialize the dhandle hash array. */

@@ -248,6 +248,8 @@ struct __wt_connection_impl {
 
 	uint32_t session_dhhash_size;	/* Session dhandle hash array size */
 	uint32_t session_cursor_cache_size;	/* Session cursor cache size */
+	uint32_t session_cursor_sweep_max; /* Max cursor buckets to sweep */
+	uint32_t session_cursor_sweep_min; /* Min cursor buckets to sweep */
 
 	WT_CACHE  *cache;		/* Page cache */
 	volatile uint64_t cache_size;	/* Cache size (either statically

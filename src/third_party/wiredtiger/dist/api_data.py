@@ -907,6 +907,12 @@ wiredtiger_open_common =\
     Config('session_cursor_cache_size', '512', r'''
         size of hash array that holds cached session cursors''',
         min='512'),
+    Config('session_cursor_sweep_max', '32', r'''
+        maximum number of cursor cache hash table buckets to sweep''',
+        min='32'),
+    Config('session_cursor_sweep_min', '5', r'''
+        minimum number of cursor cache hash table buckets to sweep ''',
+        min='5'),
     Config('session_table_cache', 'true', r'''
         Maintain a per-session cache of tables''',
         type='boolean', undoc=True), # Obsolete after WT-3476

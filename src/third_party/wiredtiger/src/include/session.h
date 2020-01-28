@@ -42,11 +42,6 @@ typedef TAILQ_HEAD(__wt_cursor_list, __wt_cursor)	WT_CURSOR_LIST;
 /* Number of cursors cached to trigger cursor sweep. */
 #define	WT_SESSION_CURSOR_SWEEP_COUNTDOWN	20
 
-/* Minimum number of buckets to visit during cursor sweep. */
-#define	WT_SESSION_CURSOR_SWEEP_MIN		5
-
-/* Maximum number of buckets to visit during cursor sweep. */
-#define	WT_SESSION_CURSOR_SWEEP_MAX		32
 /*
  * WT_SESSION_IMPL --
  *	Implementation of WT_SESSION.
