@@ -471,8 +471,6 @@ connection_stats = [
     # Session operations
     ##########################################
     SessionStat('session_open', 'open session count', 'no_clear,no_scale'),
-    SessionStat('session_cursor_cache_size', 'session cursor cache size', 'no_clear,no_scale'),
-    SessionStat('session_dhhash_size', 'session dhandle hash size', 'no_clear,no_scale'),
     SessionStat('session_query_ts', 'session query timestamp calls'),
     SessionStat('session_table_alter_fail', 'table alter failed calls', 'no_clear,no_scale'),
     SessionStat('session_table_alter_skip', 'table alter unchanged and skipped', 'no_clear,no_scale'),
