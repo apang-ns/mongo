@@ -46,6 +46,10 @@ __session_discard_dhandle(
 	TAILQ_REMOVE(&session->dhandles, dhandle_cache, q);
 	TAILQ_REMOVE(&session->dhhash[bucket], dhandle_cache, hashq);
 
+	if (dhandle_cache->dhandle->evict_lru_inuse_save > 0) {
+		WT_STAT_CONN_INCR(session, dh_evict_lru_walk_leak_sess_discard);
+	}
+
 	WT_DHANDLE_RELEASE(dhandle_cache->dhandle);
 	__wt_overwrite_and_free(session, dhandle_cache);
 }
@@ -284,12 +288,17 @@ __wt_session_release_dhandle(WT_SESSION_IMPL *session)
 		 * avoids racing with a checkpoint while it gathers a set
 		 * of handles.
 		 */
+		WT_STAT_CONN_INCR(session, dh_release_bulk_load_conn_dhandle_close);
 		WT_WITH_SCHEMA_LOCK(session, ret =
 		    __wt_conn_dhandle_close(session, false, false));
 	} else if ((btree != NULL && F_ISSET(btree, WT_BTREE_SPECIAL_FLAGS)) ||
 	    F_ISSET(dhandle, WT_DHANDLE_DISCARD | WT_DHANDLE_DISCARD_KILL)) {
 		WT_ASSERT(session, F_ISSET(dhandle, WT_DHANDLE_EXCLUSIVE));
 
+		WT_STAT_CONN_INCR(session, dh_release_special_conn_dhandle_close);
+		if (F_ISSET(dhandle, WT_DHANDLE_DISCARD_KILL)) {
+			WT_STAT_CONN_INCR(session, dh_release_special_conn_dhandle_close_kill);
+		}
 		ret = __wt_conn_dhandle_close(session, false,
 		    F_ISSET(dhandle, WT_DHANDLE_DISCARD_KILL));
 		F_CLR(dhandle, WT_DHANDLE_DISCARD | WT_DHANDLE_DISCARD_KILL);
@@ -420,6 +429,9 @@ __session_dhandle_sweep(WT_SESSION_IMPL *session)
 		    difftime(now, dhandle->timeofdeath) >
 		    conn->sweep_idle_time))) {
 			WT_STAT_CONN_INCR(session, dh_session_handles);
+			if (dhandle->evict_lru_inuse_save > 0) {
+				WT_STAT_CONN_INCR(session, dh_evict_lru_walk_leak_sess_sweep);
+			}
 			WT_ASSERT(session, !WT_IS_METADATA(dhandle));
 			__session_discard_dhandle(session, dhandle_cache);
 		}

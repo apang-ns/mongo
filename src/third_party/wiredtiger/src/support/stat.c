@@ -911,6 +911,16 @@ static const char * const __stats_connection_desc[] = {
 	"data-handle: connection sweep dhandles removed from hash list",
 	"data-handle: connection sweep time-of-death sets",
 	"data-handle: connection sweeps",
+	"data-handle: dh release bulk load conn dhandle close",
+	"data-handle: dh release special conn dhandle close",
+	"data-handle: dh release special conn dhandle close kill",
+	"data-handle: evict lru walk err",
+	"data-handle: evict lru walk leak conn discard",
+	"data-handle: evict lru walk leak conn marked dead",
+	"data-handle: evict lru walk leak conn sweep",
+	"data-handle: evict lru walk leak sess discard",
+	"data-handle: evict lru walk leak sess sweep",
+	"data-handle: evict lru walk unique leaks",
 	"data-handle: lock checkpoint evict file exclusive time (usecs)",
 	"data-handle: lock checkpoint get dhandle time (usecs)",
 	"data-handle: session dhandles swept",
@@ -1329,6 +1339,16 @@ __wt_stat_connection_clear_single(WT_CONNECTION_STATS *stats)
 	stats->dh_sweep_remove = 0;
 	stats->dh_sweep_tod = 0;
 	stats->dh_sweeps = 0;
+	stats->dh_release_bulk_load_conn_dhandle_close = 0;
+	stats->dh_release_special_conn_dhandle_close = 0;
+	stats->dh_release_special_conn_dhandle_close_kill = 0;
+	stats->dh_evict_lru_walk_err = 0;
+	stats->dh_evict_lru_walk_leak_conn_discard = 0;
+	stats->dh_evict_lru_walk_leak_conn_marked_dead = 0;
+	stats->dh_evict_lru_walk_leak_conn_sweep = 0;
+	stats->dh_evict_lru_walk_leak_sess_discard = 0;
+	stats->dh_evict_lru_walk_leak_sess_sweep = 0;
+	stats->dh_evict_lru_walk_uniq_leaks = 0;
 	stats->dh_lock_checkpoint_evict_file_exclusive_time = 0;
 	stats->dh_lock_checkpoint_get_dhandle_time = 0;
 	stats->dh_session_handles = 0;
@@ -1794,6 +1814,26 @@ __wt_stat_connection_aggregate(
 	to->dh_sweep_remove += WT_STAT_READ(from, dh_sweep_remove);
 	to->dh_sweep_tod += WT_STAT_READ(from, dh_sweep_tod);
 	to->dh_sweeps += WT_STAT_READ(from, dh_sweeps);
+	to->dh_release_bulk_load_conn_dhandle_close +=
+	    WT_STAT_READ(from, dh_release_bulk_load_conn_dhandle_close);
+	to->dh_release_special_conn_dhandle_close +=
+	    WT_STAT_READ(from, dh_release_special_conn_dhandle_close);
+	to->dh_release_special_conn_dhandle_close_kill +=
+	    WT_STAT_READ(from, dh_release_special_conn_dhandle_close_kill);
+	to->dh_evict_lru_walk_err +=
+	    WT_STAT_READ(from, dh_evict_lru_walk_err);
+	to->dh_evict_lru_walk_leak_conn_discard +=
+	    WT_STAT_READ(from, dh_evict_lru_walk_leak_conn_discard);
+	to->dh_evict_lru_walk_leak_conn_marked_dead +=
+	    WT_STAT_READ(from, dh_evict_lru_walk_leak_conn_marked_dead);
+	to->dh_evict_lru_walk_leak_conn_sweep +=
+	    WT_STAT_READ(from, dh_evict_lru_walk_leak_conn_sweep);
+	to->dh_evict_lru_walk_leak_sess_discard +=
+	    WT_STAT_READ(from, dh_evict_lru_walk_leak_sess_discard);
+	to->dh_evict_lru_walk_leak_sess_sweep +=
+	    WT_STAT_READ(from, dh_evict_lru_walk_leak_sess_sweep);
+	to->dh_evict_lru_walk_uniq_leaks +=
+	    WT_STAT_READ(from, dh_evict_lru_walk_uniq_leaks);
 	to->dh_lock_checkpoint_evict_file_exclusive_time +=
 	    WT_STAT_READ(from, dh_lock_checkpoint_evict_file_exclusive_time);
 	to->dh_lock_checkpoint_get_dhandle_time +=

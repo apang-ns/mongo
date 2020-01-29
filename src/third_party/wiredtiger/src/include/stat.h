@@ -482,6 +482,16 @@ struct __wt_connection_stats {
 	int64_t dh_sweep_remove;
 	int64_t dh_sweep_tod;
 	int64_t dh_sweeps;
+	int64_t dh_release_bulk_load_conn_dhandle_close;
+	int64_t dh_release_special_conn_dhandle_close;
+	int64_t dh_release_special_conn_dhandle_close_kill;
+	int64_t dh_evict_lru_walk_err;
+	int64_t dh_evict_lru_walk_leak_conn_discard;
+	int64_t dh_evict_lru_walk_leak_conn_marked_dead;
+	int64_t dh_evict_lru_walk_leak_conn_sweep;
+	int64_t dh_evict_lru_walk_leak_sess_discard;
+	int64_t dh_evict_lru_walk_leak_sess_sweep;
+	int64_t dh_evict_lru_walk_uniq_leaks;
 	int64_t dh_lock_checkpoint_evict_file_exclusive_time;
 	int64_t dh_lock_checkpoint_get_dhandle_time;
 	int64_t dh_session_handles;

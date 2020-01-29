@@ -171,6 +171,9 @@ __sweep_discard_trees(WT_SESSION_IMPL *session, u_int *dead_handlesp)
 		    !F_ISSET(dhandle, WT_DHANDLE_DEAD))
 			continue;
 
+		if (dhandle->evict_lru_inuse_save > 0) {
+			WT_STAT_CONN_INCR(session, dh_evict_lru_walk_leak_conn_sweep);
+		}
 		/* If the handle is marked dead, flush it from cache. */
 		WT_WITH_DHANDLE(session, dhandle, ret =
 		    __wt_conn_dhandle_close(session, false, false));

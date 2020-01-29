@@ -350,6 +350,16 @@ __wt_conn_dhandle_close(
 		break;
 	}
 
+	if (dhandle->evict_lru_inuse_save > 0) {
+		if (discard) {
+			WT_STAT_CONN_INCR(session, dh_evict_lru_walk_leak_conn_discard);
+		}
+
+		if (marked_dead) {
+			WT_STAT_CONN_INCR(session, dh_evict_lru_walk_leak_conn_marked_dead);
+		}
+	}
+
 	/*
 	 * If marking the handle dead, do so after closing the underlying btree.
 	 * (Don't do it before that, the block manager asserts there are never

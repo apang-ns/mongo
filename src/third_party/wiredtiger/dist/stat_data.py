@@ -333,6 +333,16 @@ connection_stats = [
     DhandleStat('dh_sweep_remove', 'connection sweep dhandles removed from hash list'),
     DhandleStat('dh_sweep_tod', 'connection sweep time-of-death sets'),
     DhandleStat('dh_sweeps', 'connection sweeps'),
+    DhandleStat('dh_evict_lru_walk_uniq_leaks', 'evict lru walk unique leaks'),
+    DhandleStat('dh_evict_lru_walk_err', 'evict lru walk err'),
+    DhandleStat('dh_evict_lru_walk_leak_conn_discard', 'evict lru walk leak conn discard'),
+    DhandleStat('dh_evict_lru_walk_leak_conn_marked_dead', 'evict lru walk leak conn marked dead'),
+    DhandleStat('dh_evict_lru_walk_leak_conn_sweep', 'evict lru walk leak conn sweep'),
+    DhandleStat('dh_evict_lru_walk_leak_sess_discard', 'evict lru walk leak sess discard'),
+    DhandleStat('dh_evict_lru_walk_leak_sess_sweep', 'evict lru walk leak sess sweep'),
+    DhandleStat('dh_release_bulk_load_conn_dhandle_close', 'dh release bulk load conn dhandle close'),
+    DhandleStat('dh_release_special_conn_dhandle_close', 'dh release special conn dhandle close'),
+    DhandleStat('dh_release_special_conn_dhandle_close_kill', 'dh release special conn dhandle close kill'),
 
     ##########################################
     # Locking statistics
