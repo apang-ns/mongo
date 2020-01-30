@@ -1391,15 +1391,23 @@ retry:	while (slot < max_entries) {
 		 * If another thread is waiting on the eviction server to clear
 		 * the walk point in a tree, give up.
 		 */
-		if (cache->pass_intr != 0)
+		if (cache->pass_intr != 0) {
+			if (incr) {
+				WT_STAT_CONN_INCR(session, dh_evict_lru_walk_pass_intr_while_inuse);
+			}
 			WT_ERR(EBUSY);
+		}
 
 		/*
 		 * Lock the dhandle list to find the next handle and bump its
 		 * reference count to keep it alive while we sweep.
 		 */
 		if (!dhandle_locked) {
-			WT_ERR(__evict_lock_handle_list(session));
+			ret = __evict_lock_handle_list(session);
+			if (incr && ret > 0) {
+				WT_STAT_CONN_INCR(session, dh_evict_lru_walk_lock_err_while_inuse);
+			}
+			WT_ERR(ret);
 			dhandle_locked = true;
 		}
 
@@ -1509,9 +1517,7 @@ retry:	while (slot < max_entries) {
 				    session, WT_GEN_SPLIT) == 0);
 			}
 			__wt_spin_unlock(session, &cache->evict_walk_lock);
-			if (ret != 0 ) {
-				__wt_verbose_worker(session, "__evict_walk ret %d", ret);
-			}
+
 			WT_ERR(ret);
 		}
 	}
@@ -1539,11 +1545,9 @@ err:	if (dhandle_locked)
 		__wt_readunlock(session, &conn->dhandle_lock);
 
 	if (incr) {
-		__wt_verbose_worker(session, "evict_lru_walk error %d", ret);
 		WT_ASSERT(session, dhandle->session_inuse > 0);
-		if (dhandle->evict_lru_inuse_save) {
+		if (dhandle->evict_lru_inuse_save == 0) {
 			WT_STAT_CONN_INCR(session, dh_evict_lru_walk_uniq_leaks);
-		} else {
 			dhandle->evict_lru_inuse_save = dhandle->session_inuse;
 		}
 		// (void)__wt_atomic_subi32(&dhandle->session_inuse, 1);
@@ -2034,9 +2038,7 @@ fast:		/* If the page can't be evicted, give up. */
 		    "select: %p, size %" WT_SIZET_FMT,
 		    (void *)page, page->memory_footprint);
 	}
-	if (ret != 0 && ret != WT_NOTFOUND) {
-		__wt_verbose_worker(session, "__evict_walk_tree 1 ret %d", ret);
-	}
+
 	WT_RET_NOTFOUND_OK(ret);
 
 	*slotp += (u_int)(evict - start);
@@ -2087,12 +2089,8 @@ fast:		/* If the page can't be evicted, give up. */
 		} else
 			while (ref != NULL && (ref->state != WT_REF_MEM ||
 			    WT_READGEN_EVICT_SOON(ref->page->read_gen)))
-				ret = __wt_tree_walk_count(
-				    session, &ref, &refs_walked, walk_flags);
-				if (ret != 0 && ret != WT_NOTFOUND) {
-					__wt_verbose_worker(session, "__evict_walk_tree 2 ret %d", ret);
-				}
-				WT_RET_NOTFOUND_OK(ret);
+				WT_RET_NOTFOUND_OK(__wt_tree_walk_count(
+				    session, &ref, &refs_walked, walk_flags));
 		btree->evict_ref = ref;
 	}
 

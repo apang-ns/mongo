@@ -102,6 +102,10 @@ __conn_dhandle_destroy(WT_SESSION_IMPL *session, WT_DATA_HANDLE *dhandle)
 		break;
 	}
 
+	if (dhandle->evict_lru_inuse_save > 0) {
+		WT_STAT_CONN_INCR(session, dh_evict_lru_walk_leak_conn_destroy);
+	}
+
 	__wt_rwlock_destroy(session, &dhandle->rwlock);
 	__wt_free(session, dhandle->name);
 	__wt_free(session, dhandle->checkpoint);

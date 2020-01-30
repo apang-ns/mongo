@@ -22,10 +22,15 @@ __sweep_mark(WT_SESSION_IMPL *session, time_t now)
 {
 	WT_CONNECTION_IMPL *conn;
 	WT_DATA_HANDLE *dhandle;
+	uint32_t num_dhandle_evict_lru_inuse = 0;
 
 	conn = S2C(session);
 
 	TAILQ_FOREACH(dhandle, &conn->dhqh, q) {
+		if (dhandle->evict_lru_inuse_save > 0) {
+			num_dhandle_evict_lru_inuse++;
+		}
+
 		if (WT_IS_METADATA(dhandle))
 			continue;
 
@@ -50,6 +55,10 @@ __sweep_mark(WT_SESSION_IMPL *session, time_t now)
 		dhandle->timeofdeath = now;
 		WT_STAT_CONN_INCR(session, dh_sweep_tod);
 	}
+
+	WT_STAT_CONN_SET(session,
+		dh_evict_lru_walk_leak_count_during_sweep,
+		num_dhandle_evict_lru_inuse);
 }
 
 /*
