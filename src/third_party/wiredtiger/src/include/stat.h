@@ -482,6 +482,7 @@ struct __wt_connection_stats {
 	int64_t dh_sweep_remove;
 	int64_t dh_sweep_tod;
 	int64_t dh_sweeps;
+	int64_t dh_evict_walk_leak;
 	int64_t dh_lock_checkpoint_evict_file_exclusive_time;
 	int64_t dh_lock_checkpoint_get_dhandle_time;
 	int64_t dh_session_handles;

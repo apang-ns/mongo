@@ -1535,6 +1535,10 @@ retry:	while (slot < max_entries) {
 err:	if (dhandle_locked)
 		__wt_readunlock(session, &conn->dhandle_lock);
 
+	if (incr) {
+		WT_STAT_CONN_INCR(session, dh_evict_walk_leak);
+	}
+
 	/*
 	 * If we didn't find any entries on a walk when we weren't interrupted,
 	 * let our caller know.

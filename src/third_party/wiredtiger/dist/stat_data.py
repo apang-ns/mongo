@@ -333,6 +333,7 @@ connection_stats = [
     DhandleStat('dh_sweep_remove', 'connection sweep dhandles removed from hash list'),
     DhandleStat('dh_sweep_tod', 'connection sweep time-of-death sets'),
     DhandleStat('dh_sweeps', 'connection sweeps'),
+    DhandleStat('dh_evict_walk_leak', 'evict walk dhandle leak'),
 
     ##########################################
     # Locking statistics
