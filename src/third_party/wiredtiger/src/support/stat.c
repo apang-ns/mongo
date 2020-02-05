@@ -911,6 +911,7 @@ static const char * const __stats_connection_desc[] = {
 	"data-handle: connection sweep dhandles removed from hash list",
 	"data-handle: connection sweep time-of-death sets",
 	"data-handle: connection sweeps",
+	"data-handle: evict walk dhandle leak",
 	"data-handle: lock checkpoint evict file exclusive time (usecs)",
 	"data-handle: lock checkpoint get dhandle time (usecs)",
 	"data-handle: session dhandles swept",
@@ -1329,6 +1330,7 @@ __wt_stat_connection_clear_single(WT_CONNECTION_STATS *stats)
 	stats->dh_sweep_remove = 0;
 	stats->dh_sweep_tod = 0;
 	stats->dh_sweeps = 0;
+	stats->dh_evict_walk_leak = 0;
 	stats->dh_lock_checkpoint_evict_file_exclusive_time = 0;
 	stats->dh_lock_checkpoint_get_dhandle_time = 0;
 	stats->dh_session_handles = 0;
@@ -1794,6 +1796,7 @@ __wt_stat_connection_aggregate(
 	to->dh_sweep_remove += WT_STAT_READ(from, dh_sweep_remove);
 	to->dh_sweep_tod += WT_STAT_READ(from, dh_sweep_tod);
 	to->dh_sweeps += WT_STAT_READ(from, dh_sweeps);
+	to->dh_evict_walk_leak += WT_STAT_READ(from, dh_evict_walk_leak);
 	to->dh_lock_checkpoint_evict_file_exclusive_time +=
 	    WT_STAT_READ(from, dh_lock_checkpoint_evict_file_exclusive_time);
 	to->dh_lock_checkpoint_get_dhandle_time +=
