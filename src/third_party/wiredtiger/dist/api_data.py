@@ -913,6 +913,10 @@ wiredtiger_open_common =\
     Config('session_cursor_sweep_min', '5', r'''
         minimum number of cursor cache hash table buckets to sweep ''',
         min='5'),
+    Config('dh_evict_walk_leak_fix', 'true', r'''
+        fix dhandle leak in evict_walk caused by error cases not decreasing
+        the session_inuse refcount''',
+        type='boolean'),
     Config('session_table_cache', 'true', r'''
         Maintain a per-session cache of tables''',
         type='boolean', undoc=True), # Obsolete after WT-3476
