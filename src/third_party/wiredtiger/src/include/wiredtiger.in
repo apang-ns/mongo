@@ -2822,7 +2822,7 @@ struct __wt_connection {
  * default \c false.}
  * @config{dh_evict_walk_leak_fix, fix dhandle leak in evict_walk caused by
  * error cases not decreasing the session_inuse refcount., a boolean flag;
- * default \c false.}
+ * default \c true.}
  * @config{direct_io, Use \c O_DIRECT on POSIX systems\, and \c
  * FILE_FLAG_NO_BUFFERING on Windows to access files.  Options are given as a
  * list\, such as <code>"direct_io=[data]"</code>. Configuring \c direct_io
