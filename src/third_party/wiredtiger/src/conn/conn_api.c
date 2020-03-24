@@ -2601,6 +2601,11 @@ wiredtiger_open(const char *home, WT_EVENT_HANDLER *event_handler,
 		session, cfg, "session_cursor_sweep_min", &cval));
 	conn->session_cursor_sweep_min = cval.val;
 
+	WT_ERR(__wt_config_gets(
+		session, cfg, "dh_evict_walk_leak_fix", &cval));
+	if (cval.val)
+		F_SET(conn, WT_CONN_DH_EVICT_WALK_LEAK_FIX);
+
 	/*
 	 * If buffer alignment is not configured, use zero unless direct I/O is
 	 * also configured, in which case use the build-time default. The code

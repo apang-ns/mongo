@@ -1537,6 +1537,13 @@ err:	if (dhandle_locked)
 
 	if (incr) {
 		WT_STAT_CONN_INCR(session, dh_evict_walk_leak);
+
+		if (F_ISSET(conn, WT_CONN_DH_EVICT_WALK_LEAK_FIX)) {
+			WT_ASSERT(session, dhandle->session_inuse > 0);
+			(void)__wt_atomic_subi32(&dhandle->session_inuse, 1);
+			incr = false;
+			WT_STAT_CONN_INCR(session, dh_evict_walk_leak_fix);
+		}
 	}
 
 	/*

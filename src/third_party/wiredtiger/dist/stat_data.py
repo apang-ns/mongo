@@ -334,6 +334,7 @@ connection_stats = [
     DhandleStat('dh_sweep_tod', 'connection sweep time-of-death sets'),
     DhandleStat('dh_sweeps', 'connection sweeps'),
     DhandleStat('dh_evict_walk_leak', 'evict walk dhandle leak'),
+    DhandleStat('dh_evict_walk_leak_fix', 'evict walk dhandle leak fix'),
 
     ##########################################
     # Locking statistics
